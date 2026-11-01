@@ -1,73 +1,82 @@
-# 人工智能技术应用专业网络教材模板
+# 计算机网络（网络教材）
 
-这是人工智能技术应用专业（成人大专）系列网络教材的公共模板，从《自然语言处理导论》（https://mingzifu9.github.io/nlp-textbook/ ）提炼而来。每门课从这个模板新建一个仓库，网页样式、在线答题、交互动画框架、学习图谱和维护脚本都已经配好，只需要写内容。
+面向成人教育人工智能技术应用专业（专科）的《计算机网络》网络教材，课程代码 816，4 学分 72 学时（线上理论 46 + 线上实验 12 + 线下理论 14），第 2 学期，期末闭卷。
 
-## 模板里有什么
+网页版：<https://mingzifu9.github.io/computer-network/>
+
+## 内容
+
+跟着“小禾设计工作室”从 5 个人发展到 3 个部门、再开一家分店的过程，一章搭一块网络，按五层模型由下往上：
+
+| 章 | 标题 |
+|---|---|
+| 1 | 认识计算机网络 |
+| 2 | 网络体系结构：分层与协议 |
+| 3 | 物理层：从比特到信号 |
+| 4 | 数据链路层与以太网交换 |
+| 5 | VLAN 与无线局域网 |
+| 6 | IP 地址：IPv4、子网划分与 IPv6 |
+| 7 | 路由：数据包怎么找路 |
+| 8 | 网络层的好帮手：ARP、ICMP、DHCP 与 NAT |
+| 9 | 传输层：TCP 与 UDP |
+| 10 | 应用层：域名、网页与常用服务 |
+| 11 | 网络安全 |
+| 12 | 网络管理、新技术与综合项目 |
+
+每章含学习目标、情景导入、正文、本章常见问题对照、“AI 与网络”小节、3 个实验（2 个必做 ★、1 个选做 ☆）、小结、课后练习（单选、多选、判断可在线作答）和参考文献。另有附录 A～E（常用命令速查、实验环境、Cisco 与华为命令对照、术语表、实验报告模板与综合项目指南）、常见问题、学习图谱和两套闭卷模拟卷。
+
+实验工具都免费：Windows 命令行、Wireshark（打开编者录制的抓包文件）、Cisco Packet Tracer（主线，附录 C 给出华为命令对照），以及少量只用标准库的 Python 程序。
+
+## 目录结构
 
 | 路径 | 内容 |
 |---|---|
-| `course.yml` | **课程配置**：书名、学分学时、章节、附录、证书。改完运行 `python tools/course.py sync`，导航、首页、章节骨架等自动更新 |
-| `编写规范.md` | **动笔前先读**：一章的结构、篇幅、实验、题型、文献、动画、术语表和配套资源的统一要求 |
-| `系列公共术语表.md` | 七门课共用的 91 个术语，统一译名和定义 |
-| `docs/chapters/01-sample/` | 示例章，演示每一种元素的写法；写第一章时整章替换 |
-| `docs/sims/` | 交互动画，`common/` 是公共样式和脚本，`example-counter/` 是示例 |
-| `docs/learning-graph/` | 学习图谱（概念和先修关系写在 `data.js`） |
-| `docs/certificate.md` | 证书考点对照页，没有对应证书的课程从 nav 里删掉 |
-| `docs/appendix/` | 附录 A Python 速查、B 工具库速查、C 实验环境与数据说明、D 术语表 |
-| `labs/` | 实验代码（按章分目录）、数据和 `requirements.txt` |
-| `slides/` | 每章课件底稿 `chNN.md`，写法见 `slides/README.md` |
-| `lesson-plans/` | 每章教案底稿 `chNN.yml`，写法见 `lesson-plans/README.md` |
-| `tools/` | 维护脚本，见下文 |
-| `.github/workflows/pages.yml` | 推送到 `main` 后自动发布到 GitHub Pages |
-| `.github/workflows/exports.yml` | 手动运行（或推送 `v1.0` 这样的标签），在 GitHub 上生成全部课件、教案和 Word/PDF 版供下载 |
-
-## 用模板新建一门课
-
-1. 在 GitHub 上打开本仓库，点 **Use this template → Create a new repository**，仓库名用课程的英文短名，例如 `ml-textbook`。
-2. 新仓库的 **Settings → Pages → Source** 选 **GitHub Actions**。
-3. 按大纲填写 `course.yml`（书名、仓库名、学分学时、各章目录名和标题、证书），运行 `python tools/course.py sync`：`mkdocs.yml` 的站点名和导航、首页课程信息和目录、术语表各章小节、学习图谱章节列表都会更新，还没有的章节按统一体例生成骨架。以后改章名、加章节、加动画，都是改完再 sync 一次。
-4. 手动修改 `docs/index.md` 的简介、`docs/course-description.md`、`docs/certificate.md`；本 README 改写成本课的说明。写完第 1 章后删掉 `01-sample`和 `docs/sims/example-counter/` 里的示例内容。课件和教案底稿用 `make_slides.py draft N`、`make_lesson_plan.py draft N` 生成，格式示范见模板包的 `示例输出/`。
-5. 推送到 `main`，几分钟后网页出现在 `https://<用户名>.github.io/<仓库名>/`。
-
-没有实验的课（如导论）：`course.yml` 里把 `lab_section` 改成“在线体验”、`lab_word` 改成“体验”、`frontier_title` 改成“身边的 AI”，章节骨架、首页目录和统计会跟着用这些叫法。
-
-## 维护脚本
-
-```bash
-python tools/glossary_links.py anchors     # 给术语表每个术语加锚点
-python tools/glossary_links.py link 03     # 第 3 章正文中的术语改成悬停可见定义的链接
-python tools/glossary_links.py concepts 03 # 生成第 3 章的“本章概念清单”
-python tools/graph_text.py                 # 检查学习图谱并生成文字版
-python tools/book_stats.py                 # 更新首页“全书概览”统计表
-python tools/course.py sync                # 按 course.yml 更新导航、首页、章节骨架等
-python tools/course.py new-sim 名称 3 "标题" # 新建第 3 章的交互动画骨架
-python tools/export_docx.py --pdf          # 导出 Word 版和 PDF 版到 build/（需要 pandoc 和 LibreOffice）
-```
-
-## 课件、教案和 Word/PDF 版
-
-```bash
-pip install -r requirements-tools.txt      # 第一次：Python 库
-npm install && npx playwright install chromium   # 第一次：渲染配图用的 Node 库和浏览器
-npm run figures                            # 把 Mermaid 图和交互动画渲染成图片（课件、Word 版要用）
-
-python tools/make_slides.py draft 3        # 从第 3 章正文生成课件底稿 slides/ch03.md，精简后再 build
-python tools/make_slides.py build 3        # → build/课件/第03章 章名.pptx（all 表示全部章节）
-python tools/make_lesson_plan.py draft 3   # 生成教案底稿 lesson-plans/ch03.yml，补写“【待填】”后再 build
-python tools/make_lesson_plan.py build 3   # → build/教案/第03章 章名 教案.docx
-python tools/export_docx.py --pdf          # → build/书名.docx 和 .pdf，动画换成截图和二维码
-```
-
-本机不想装这些工具时，在 GitHub 仓库的 **Actions → 导出课件、教案和 Word/PDF → Run workflow** 运行一次，几分钟后在运行页面底部的 Artifacts 下载全部文件。底稿（`slides/`、`lesson-plans/`）要提交到仓库，生成的文件不提交。
+| `course.yml` | 课程配置：书名、学时、章节、附录。改完运行 `python tools/course.py sync` |
+| `docs/chapters/` | 12 章正文 |
+| `docs/sims/` | 交互动画（每个文件夹一个，`common/` 是公共样式和脚本） |
+| `docs/appendix/` | 附录 |
+| `docs/learning-graph/` | 学习图谱（概念和先修关系在 `data.js`，由 `tools/build_graph.py` 生成） |
+| `docs/faq/`、`docs/mock-exam.md` | 常见问题、闭卷模拟卷 |
+| `labs/` | 实验程序和抓包文件，见 `labs/README.md` |
+| `slides/`、`lesson-plans/` | 每章课件底稿（`chNN.md`）和教案底稿（`chNN.yml`） |
+| `tools/` | 维护脚本 |
+| `.github/workflows/pages.yml` | 推送到 `main` 后自动发布网页 |
+| `.github/workflows/exports.yml` | 手动运行，在 GitHub 上生成课件、教案和 Word/PDF 版 |
 
 ## 本地预览
 
 ```bash
 pip install -r requirements-docs.txt
 mkdocs serve          # 浏览器打开 http://127.0.0.1:8000
-mkdocs build --strict # 提交前确认没有警告
 ```
 
-## 说明
+## 维护脚本
 
-书中运行结果均为编者实测；需要 GPU、联网下载模型或调用大模型 API 的部分标为“待实测”，并附记录表。数据集来源与许可见 `labs/data/README.md`，仅用于教学。
+```bash
+python tools/course.py sync                # 按 course.yml 更新导航、首页、章节骨架等
+python tools/glossary_links.py anchors     # 给术语表每个术语加锚点
+python tools/glossary_links.py link 03     # 第 3 章正文中的术语改成悬停可见定义的链接
+python tools/glossary_links.py concepts 03 # 生成第 3 章的“本章概念清单”
+python tools/build_graph.py                # 由术语表生成学习图谱数据
+python tools/graph_text.py                 # 检查学习图谱并生成文字版
+python tools/book_stats.py                 # 更新首页“全书概览”统计表
+python tools/course.py new-sim 名称 3 "标题" # 新建第 3 章的交互动画骨架
+```
+
+## 课件、教案和 Word/PDF 版
+
+```bash
+pip install -r requirements-tools.txt
+npm install && npx playwright install chromium
+npm run figures                            # 把 Mermaid 图和交互动画渲染成图片
+
+python tools/make_slides.py build all      # → build/课件/第NN章 章名.pptx
+python tools/make_lesson_plan.py build all # → build/教案/第NN章 章名 教案.docx
+python tools/export_docx.py --pdf          # → build/计算机网络.docx 和 .pdf（需要 pandoc 和 LibreOffice）
+```
+
+## 关于实验结果
+
+- 抓包文件由编者在 Linux 网络命名空间搭建的小网络中录制（`labs/data/make_pcaps.sh`），正文引用的端口号、序号等都来自这些文件，请不要重新录制覆盖。
+- Python 程序的输出是编者用 Python 3.13 实际运行得到的。
+- Packet Tracer 和 Windows 命令的显示结果按标准格式整理，标为“输出格式示意”。编写环境装不了 Packet Tracer，建议任课教师课前在 Packet Tracer 9.0 中把各章实验走一遍。

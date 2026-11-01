@@ -32,18 +32,18 @@
 | [第 1 章](chapters/01-intro/index.md) | 0.9 万 | 3 | 20（16） | 30 | 5 | 2 |
 | [第 2 章](chapters/02-architecture/index.md) | 0.7 万 | 3 | 20（16） | 24 | 5 | 2 |
 | [第 3 章](chapters/03-physical/index.md) | 0.8 万 | 3 | 20（16） | 30 | 5 | 3 |
-| [第 4 章](chapters/04-datalink/index.md) | 0.1 万 | 3 | 5（3） | 0 | 1 | 0 |
-| [第 5 章](chapters/05-vlan-wlan/index.md) | 0.1 万 | 3 | 5（3） | 0 | 1 | 0 |
-| [第 6 章](chapters/06-ip-address/index.md) | 0.1 万 | 3 | 5（3） | 0 | 1 | 0 |
-| [第 7 章](chapters/07-routing/index.md) | 0.1 万 | 3 | 5（3） | 0 | 1 | 0 |
-| [第 8 章](chapters/08-arp-dhcp-nat/index.md) | 0.1 万 | 3 | 5（3） | 0 | 1 | 0 |
-| [第 9 章](chapters/09-transport/index.md) | 0.1 万 | 3 | 5（3） | 0 | 1 | 0 |
-| [第 10 章](chapters/10-application/index.md) | 0.1 万 | 3 | 5（3） | 0 | 1 | 0 |
-| [第 11 章](chapters/11-security/index.md) | 0.1 万 | 3 | 5（3） | 0 | 1 | 0 |
-| [第 12 章](chapters/12-management/index.md) | 0.1 万 | 3 | 5（3） | 0 | 1 | 0 |
-| **合计** | **3.1 万** | **36** | **105（75）** | **84** | **24** | **7** |
+| [第 4 章](chapters/04-datalink/index.md) | 1.0 万 | 3 | 20（16） | 29 | 5 | 2 |
+| [第 5 章](chapters/05-vlan-wlan/index.md) | 0.8 万 | 3 | 20（16） | 20 | 4 | 2 |
+| [第 6 章](chapters/06-ip-address/index.md) | 0.8 万 | 3 | 20（16） | 23 | 5 | 2 |
+| [第 7 章](chapters/07-routing/index.md) | 0.8 万 | 3 | 20（16） | 22 | 5 | 2 |
+| [第 8 章](chapters/08-arp-dhcp-nat/index.md) | 0.7 万 | 3 | 20（16） | 16 | 5 | 3 |
+| [第 9 章](chapters/09-transport/index.md) | 0.8 万 | 3 | 20（16） | 25 | 5 | 2 |
+| [第 10 章](chapters/10-application/index.md) | 1.0 万 | 3 | 20（16） | 28 | 6 | 2 |
+| [第 11 章](chapters/11-security/index.md) | 1.0 万 | 3 | 20（16） | 31 | 7 | 2 |
+| [第 12 章](chapters/12-management/index.md) | 0.8 万 | 3 | 20（16） | 14 | 3 | 1 |
+| **合计** | **10.1 万** | **36** | **240（192）** | **292** | **60** | **25** |
 
-正文字数只统计汉字，不含代码和课后练习；单选、多选和判断题可以在网页上直接作答。配套学习资源：[交互动画](sims/index.md) 7 个 · [学习图谱](learning-graph/index.md) 137 个概念 · [常见问题](faq/index.md) 0 问 · [术语表](appendix/glossary.md) 84 条。
+正文字数只统计汉字，不含代码和课后练习；单选、多选和判断题可以在网页上直接作答。配套学习资源：[交互动画](sims/index.md) 25 个 · [学习图谱](learning-graph/index.md) 292 个概念 · [常见问题](faq/index.md) 36 问 · [术语表](appendix/glossary.md) 292 条。
 
 <!-- stats:end -->
 

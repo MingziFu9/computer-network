@@ -79,7 +79,7 @@ nav:
     - "故障排查闯关": sims/troubleshoot/index.md
   - 学习图谱: learning-graph/index.md
   - 常见问题: faq/index.md
-  - "在线模拟卷": mock-exam.md
+  - "闭卷模拟卷": mock-exam.md
   - 附录:
     - "附录 A 常用网络命令速查": appendix/a-commands.md
     - "附录 B 实验环境与资源说明": appendix/b-environment.md
