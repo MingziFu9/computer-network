@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>交换机自学习</title>
+<link rel="stylesheet" href="../common/sim.css">
+<style>
+#net { width:100%; display:block; }
+.pc rect { fill:#fff; stroke:#90a4ae; stroke-width:2; }
+.pc.src rect { stroke:#3f51b5; fill:#e8eaf6; }
+.pc.dst rect { stroke:#ef6c00; fill:#fff3e0; }
+.pc.got rect { fill:#e8f5e9; stroke:#43a047; }
+.pc.drop rect { fill:#f5f5f5; stroke:#bdbdbd; }
+.lnk { stroke:#b0bec5; stroke-width:3; }
+.lnk.act { stroke:#3f51b5; stroke-width:5; }
+.lnk.flood { stroke:#ef6c00; stroke-width:5; stroke-dasharray:8 5; }
+.t { font-size:13px; text-anchor:middle; }
+.s { font-size:11px; text-anchor:middle; fill:#666; }
+table.mt { border-collapse:collapse; font-size:13px; width:100%; }
+table.mt th, table.mt td { border:1px solid var(--line); padding:3px 6px; text-align:center; }
+table.mt tr.new td { background:#fff8e1; }
+select { font-size:13px; }
+</style>
+</head>
+<body>
+<h1>交换机自学习：MAC 地址表是怎么填满的</h1>
+<div class="sub">规则：① 记下帧的<b>源地址</b>和进来的接口；② 查<b>目的地址</b>：查到就转发，查不到或广播就泛洪，在同一接口就过滤。表项 300 秒没刷新就删除。</div>
+<div class="row">发送方 <select id="src"></select> → 接收方 <select id="dst"></select>
+  <button id="send">发送一帧</button><button id="age">时间快进 5 分钟</button><button id="reset">交换机重启</button></div>
+<div class="row ex"><span class="lbl">试试：</span><button data-s="0">教材四步演示</button></div>
+<div class="grid2">
+  <svg id="net" viewBox="0 0 420 260"></svg>
+  <div class="box"><h2>MAC 地址表</h2><table class="mt"><thead><tr><th>MAC 地址</th><th>接口</th><th>剩余寿命</th></tr></thead><tbody id="tb"></tbody></table>
+  <div class="note" id="cnt"></div></div>
+</div>
+<div class="box"><h2 id="t">选好发送方和接收方，点“发送一帧”</h2><div class="msg" id="msg"></div></div>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var NS = "http://www.w3.org/2000/svg";
+  var PCS = [{ n: "小林", m: "A" }, { n: "禾姐", m: "B" }, { n: "阿美", m: "C" }, { n: "陈姐", m: "D" }];
+  var table = {}, now = 0, last = null, step = 0, demo = null;
+  var X = [60, 160, 260, 360];
+  PCS.forEach(function (p, i) {
+    $("src").add(new Option(p.n + "（" + p.m + "，" + (i + 1) + " 号口）", i));
+    $("dst").add(new Option(p.n + "（" + p.m + "）", i));
+  });
+  $("dst").add(new Option("广播（全 F）", "bc"));
+  $("dst").value = 2;
+  function el(tag, a, txt) { var e = document.createElementNS(NS, tag); for (var k in a) e.setAttribute(k, a[k]); if (txt != null) e.textContent = txt; return e; }
+  function draw() {
+    var svg = $("net"); svg.innerHTML = "";
+    PCS.forEach(function (p, i) {
+      var cls = "lnk";
+      if (last) { if (i === last.s) cls += " act"; else if (last.out.indexOf(i) >= 0) cls += last.flood ? " flood" : " act"; }
+      svg.appendChild(el("line", { x1: 150 + i * 40, y1: 84, x2: X[i], y2: 180, "class": cls }));
+    });
+    svg.appendChild(el("rect", { x: 120, y: 40, width: 180, height: 44, rx: 6, fill: "#37474f" }));
+    svg.appendChild(el("text", { x: 210, y: 67, "class": "t", fill: "#fff" }, "交换机（下方数字是接口号）"));
+    PCS.forEach(function (p, i) {
+      svg.appendChild(el("text", { x: 140 + i * 40, y: 100, "class": "s" }, (i + 1)));
+      var cls = "pc";
+      if (last) {
+        if (i === last.s) cls += " src";
+        else if (last.out.indexOf(i) >= 0) cls += (last.d === "bc" || last.d === i) ? " got" : " drop";
+      }
+      var g = el("g", { "class": cls });
+      g.appendChild(el("rect", { x: X[i] - 38, y: 180, width: 76, height: 50, rx: 6 }));
+      g.appendChild(el("text", { x: X[i], y: 202, "class": "t" }, p.n));
+      g.appendChild(el("text", { x: X[i], y: 220, "class": "s" }, "MAC " + p.m));
+      svg.appendChild(g);
+    });
+    var rows = Object.keys(table).sort();
+    $("tb").innerHTML = rows.length ? rows.map(function (m) {
+      var e = table[m]; return '<tr class="' + (last && last.learn === m ? "new" : "") + '"><td>' + m + "</td><td>" + (e.p + 1) + " 号口</td><td>" + Math.max(0, 300 - (now - e.t)) + " 秒</td></tr>";
+    }).join("") : '<tr><td colspan="3">（空）</td></tr>';
+    $("cnt").textContent = "表中共 " + rows.length + " 条。";
+  }
+  function send(s, d) {
+    if (d !== "bc" && s === d) { $("msg").textContent = "发送方和接收方不能是同一台电脑。"; return; }
+    var m = PCS[s].m, learnTxt;
+    if (table[m]) learnTxt = "源地址 " + m + " 已在表中，刷新它的寿命。"; else learnTxt = "<b>学习</b>：记下“" + m + " 在 " + (s + 1) + " 号口”。";
+    table[m] = { p: s, t: now };
+    var out, flood, act;
+    if (d === "bc") { out = [0, 1, 2, 3].filter(function (i) { return i !== s; }); flood = true; act = "目的地址是广播，<b>泛洪</b>到其他所有接口，所有电脑都收下。"; }
+    else if (table[PCS[d].m]) {
+      var p = table[PCS[d].m].p;
+      if (p === s) { out = []; flood = false; act = "目的地址在同一接口，<b>过滤</b>（丢弃）。"; }
+      else { out = [p]; flood = false; act = "查到 " + PCS[d].m + " 在 " + (p + 1) + " 号口，只从这个接口<b>转发</b>。"; }
+    } else { out = [0, 1, 2, 3].filter(function (i) { return i !== s; }); flood = true; act = "表里查不到 " + PCS[d].m + "，<b>泛洪</b>到其他所有接口；不是收件人的电脑（灰色）收到后丢弃。"; }
+    last = { s: s, d: d, out: out, flood: flood, learn: m };
+    $("t").textContent = PCS[s].n + " → " + (d === "bc" ? "广播" : PCS[d].n);
+    $("msg").innerHTML = "① " + learnTxt + "<br>② " + act;
+    now += 10; draw();
+  }
+  $("send").onclick = function () { var d = $("dst").value; send(+$("src").value, d === "bc" ? "bc" : +d); };
+  $("age").onclick = function () {
+    now += 300; var gone = [];
+    Object.keys(table).forEach(function (m) { if (now - table[m].t >= 300) { gone.push(m); delete table[m]; } });
+    last = null; $("t").textContent = "过了 5 分钟";
+    $("msg").textContent = gone.length ? "这段时间没有再收到 " + gone.join("、") + " 发出的帧，表项过期被删除。下次需要时重新学习。" : "表本来就是空的。";
+    draw();
+  };
+  $("reset").onclick = function () { table = {}; last = null; now = 0; $("t").textContent = "交换机重启，地址表清空"; $("msg").textContent = ""; draw(); };
+  var DEMO = [[0, 2], [2, 0], [0, 2], [3, "bc"]];
+  document.querySelector("[data-s]").onclick = function () {
+    if (!demo || step >= DEMO.length) { table = {}; now = 0; step = 0; demo = true; }
+    var d = DEMO[step++]; $("src").value = d[0]; $("dst").value = d[1]; send(d[0], d[1]);
+    $("t").textContent = "教材演示第 " + step + " 步（共 4 步，继续点按钮）：" + $("t").textContent;
+    if (step >= DEMO.length) demo = null;
+  };
+  draw();
+})();
+</script>
+<script src="../common/sim.js"></script>
+</body>
+</html>

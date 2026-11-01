@@ -112,6 +112,35 @@ description: 本书主要术语的中英文名称、简明定义和例子，按�
 
 | 术语 | 英文 | 定义 | 例子 |
 |---|---|---|---|
+| <span id="g-链路"></span>链路 | Link | 从一个节点到相邻节点的一段物理线路，中间没有任何其他交换节点 | 电脑到交换机的一根网线 |
+| <span id="g-封装成帧"></span>封装成帧 | Framing | 在一段数据的前后加上首部和尾部构成帧，并标出帧的开始和结束 | 写信时开头写称呼、结尾写落款 |
+| <span id="g-透明传输"></span>透明传输 | Transparent Transmission | 无论数据中出现什么比特组合都能原样传过去，数据链路层好像“看不见” | PPP 用字节填充实现透明传输 |
+| <span id="g-差错检测"></span>差错检测 | Error Detection | 接收方检查收到的帧在传输中是否出错 | 以太网用 CRC 做差错检测 |
+| <span id="g-零比特填充"></span>零比特填充 | Zero-bit Stuffing | 发送方每遇到连续 5 个 1 就插入一个 0，接收方再删掉，避免数据中出现帧标志 | HDLC、同步传输的 PPP |
+| <span id="g-误码率"></span>误码率 | Bit Error Rate | 传错的比特数占传输总比特数的比例 | 误码率 10⁻¹⁰ 表示平均一百亿个比特错一个 |
+| <span id="g-循环冗余检验"></span>循环冗余检验 | Cyclic Redundancy Check | 用约定的除数对数据做除法得到余数作为检验值，接收方重算比对来发现错误，简称 CRC | 以太网帧末尾的 4 字节 CRC-32 |
+| <span id="g-帧检验序列"></span>帧检验序列 | Frame Check Sequence | 附在帧末尾的检验值，简称 FCS | 以太网帧的最后 4 个字节 |
+| <span id="g-PPP"></span>PPP | Point-to-Point Protocol | 点对点协议，用于点对点链路，只做差错检测、出错丢弃，可进行身份认证 | 早年电话拨号上网 |
+| <span id="g-PPPoE"></span>PPPoE | PPP over Ethernet | 在以太网上运行的 PPP，家庭宽带拨号上网常用 | 路由器里填的宽带账号和密码 |
+| <span id="g-以太网"></span>以太网 | Ethernet | 由 IEEE 802.3 标准规定的局域网技术，今天局域网的绝对主流 | 办公室网线连接的网络 |
+| <span id="g-MAC-地址"></span>MAC 地址 | MAC Address | 固化在网卡中的 48 位硬件地址，前 24 位是厂商编号 | 00:e0:4c:68:01:0a |
+| <span id="g-OUI"></span>OUI | Organizationally Unique Identifier | IEEE 分配给厂商的 24 位编号，即 MAC 地址的前 24 位 | 00:e0:4c 属于瑞昱半导体 |
+| <span id="g-广播地址"></span>广播地址 | Broadcast Address | 48 位全为 1 的 MAC 地址，表示发给局域网中所有网卡 | ff:ff:ff:ff:ff:ff |
+| <span id="g-单播"></span>单播 | Unicast | 发给某一个特定接收方的通信方式 | 电脑把网页请求发给路由器 |
+| <span id="g-多播"></span>多播 | Multicast | 发给一组接收方的通信方式，也叫组播 | IPTV、视频会议 |
+| <span id="g-最大传送单元"></span>最大传送单元 | Maximum Transmission Unit | 帧的数据部分允许的最大长度，简称 MTU，以太网为 1500 字节 | IP 数据报超过 1500 字节要分片 |
+| <span id="g-CSMA-CD"></span>CSMA/CD | Carrier Sense Multiple Access with Collision Detection | 载波监听多点接入 / 碰撞检测：先听后说、边说边听、碰撞后随机退避 | 早期总线式和集线器以太网 |
+| <span id="g-争用期"></span>争用期 | Contention Period | 信号在总线上往返一次的时间，10 Mbit/s 以太网为 51.2 微秒 | 决定了最短帧长 64 字节 |
+| <span id="g-集线器"></span>集线器 | Hub | 对比特放大后从所有其他接口发出的设备，工作在物理层 | 已基本淘汰的“八口 HUB” |
+| <span id="g-交换机"></span>交换机 | Switch | 根据目的 MAC 地址转发帧的设备，工作在数据链路层 | 办公室机柜里的 24 口交换机 |
+| <span id="g-MAC-地址表"></span>MAC 地址表 | MAC Address Table | 交换机记录“哪个 MAC 地址在哪个接口”的表，靠自学习建立 | show mac address-table 显示的内容 |
+| <span id="g-冲突域"></span>冲突域 | Collision Domain | 同一时间只能有一台设备发送、否则会发生碰撞的范围 | 集线器所有接口同属一个冲突域 |
+| <span id="g-广播域"></span>广播域 | Broadcast Domain | 一个广播帧能到达的所有设备组成的范围 | 交换机所有接口同属一个广播域，路由器隔离广播域 |
+| <span id="g-自学习"></span>自学习 | Self-learning | 交换机把收到的帧的源 MAC 地址和接收接口记入地址表的过程 | 交换机插上就能用 |
+| <span id="g-泛洪"></span>泛洪 | Flooding | 交换机把帧从除接收接口以外的所有接口发出 | 目的地址未知或广播时 |
+| <span id="g-广播风暴"></span>广播风暴 | Broadcast Storm | 网络存在环路时广播帧无休止地循环、越来越多，导致网络瘫痪 | 一根网线两头插在同一台交换机上 |
+| <span id="g-生成树协议"></span>生成树协议 | Spanning Tree Protocol | 交换机自动阻塞环路中的某些接口以消除环路的协议，简称 STP | Packet Tracer 中接口刚连上时的橙灯 |
+| <span id="g-RoCE"></span>RoCE | RDMA over Converged Ethernet | 在以太网上实现远程直接内存访问的技术，AI 集群常用 | GPU 服务器之间交换训练数据 |
 
 ## 第 5 章 VLAN 与无线局域网
 
