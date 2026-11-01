@@ -63,7 +63,7 @@
 | [第 9 章 传输层：TCP 与 UDP](chapters/09-transport/index.md) | 实验 9-1 ★ 在抓包里找三次握手和四次挥手<br>实验 9-2 ★ 两人聊天程序<br>实验 9-3 ☆ TCP 与 UDP 对比 |
 | [第 10 章 应用层：域名、网页与常用服务](chapters/10-application/index.md) | 实验 10-1 ★ 查域名、看网页请求<br>实验 10-2 ★ 搭工作室内部网站、DNS 和邮件服务器<br>实验 10-3 ☆ 用 Python 搭一个网页 |
 | [第 11 章 网络安全](chapters/11-security/index.md) | 实验 11-1 ★ 看懂证书，对比 HTTP 明文和 HTTPS 密文<br>实验 11-2 ★ 用 ACL 保护财务部<br>实验 11-3 ☆ 钓鱼识别闯关 |
-| [第 12 章 网络管理、新技术与综合项目](chapters/12-management/index.md) | 实验 12-1 ★ 实验名称<br>实验 12-2 ★ 实验名称<br>实验 12-3 ★ 实验名称 |
+| [第 12 章 网络管理、新技术与综合项目](chapters/12-management/index.md) | 实验 12-1 ★ 故障排查闯关<br>实验 12-2 ★ 综合项目：小禾设计工作室组网方案<br>实验 12-3 ☆ 用 Python 做网络巡检小工具 |
 
 附录：[A 常用网络命令速查](appendix/a-commands.md) · [B 实验环境与资源说明](appendix/b-environment.md) · [C Cisco 与华为命令对照](appendix/c-huawei.md) · [D 术语表](appendix/glossary.md) · [E 实验报告模板与综合项目指南](appendix/e-project.md)
 <!-- toc:end -->

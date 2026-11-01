@@ -76,6 +76,7 @@ nav:
     - "对称与非对称加密": sims/crypto/index.md
     - "防火墙规则匹配": sims/firewall-acl/index.md
     - "钓鱼识别闯关": sims/phishing-quiz/index.md
+    - "故障排查闯关": sims/troubleshoot/index.md
   - 学习图谱: learning-graph/index.md
   - 常见问题: faq/index.md
   - "在线模拟卷": mock-exam.md

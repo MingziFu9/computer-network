@@ -350,3 +350,18 @@ description: 本书主要术语的中英文名称、简明定义和例子，按�
 
 | 术语 | 英文 | 定义 | 例子 |
 |---|---|---|---|
+| <span id="g-故障管理"></span>故障管理 | Fault Management | 网络管理功能之一：发现、定位、排除故障并记录处理过程 | DNS 服务器没开机导致大家上不了网 |
+| <span id="g-配置管理"></span>配置管理 | Configuration Management | 网络管理功能之一：记录、修改、备份设备配置，管理设备清单 | 改交换机配置前先备份 |
+| <span id="g-性能管理"></span>性能管理 | Performance Management | 网络管理功能之一：监控带宽利用率、时延、丢包等，找出瓶颈 | 发现下午出口带宽跑满 |
+| <span id="g-安全管理"></span>安全管理 | Security Management | 网络管理功能之一：管理账号权限、ACL、防火墙，检查安全日志 | 财务服务器只允许财务部访问 |
+| <span id="g-计费管理"></span>计费管理 | Accounting Management | 网络管理功能之一：统计用户或部门使用的网络资源 | 运营商按流量计费 |
+| <span id="g-SNMP"></span>SNMP | Simple Network Management Protocol | 简单网络管理协议，管理站通过 UDP 161 向设备上的代理查询状态，代理用 UDP 162 主动发送陷阱 | 网管软件集中查看所有交换机的接口流量 |
+| <span id="g-陷阱"></span>陷阱 | Trap | SNMP 代理在发生重要事件时主动发给管理站的报告 | 接口断开时交换机立即报警 |
+| <span id="g-由下往上"></span>由下往上 | Bottom-up Troubleshooting | 从物理层开始逐层往上验证的故障排查方法 | 看灯 → ipconfig → ping 网关 → ping 外网 → nslookup |
+| <span id="g-QoS"></span>QoS | Quality of Service | 服务质量，为不同流量设置优先级，带宽不足时优先保证时延敏感的业务 | 视频会议数据包优先转发 |
+| <span id="g-软件定义网络-SDN"></span>软件定义网络 SDN | Software Defined Networking | 把控制功能与转发功能分离，由中央控制器统一编程管理网络的技术 | 控制器一次下发策略到所有交换机 |
+| <span id="g-VPC"></span>VPC | Virtual Private Cloud | 虚拟私有云，在云上为用户隔离出的虚拟网络，可自行划分子网和安全规则 | 在云上建一个 10.0.0.0/16 的私有网络 |
+| <span id="g-5G"></span>5G | 5th Generation Mobile Network | 第五代移动通信技术，具有高速率、低时延、大连接的特点，支持网络切片 | 车联网、远程工业控制 |
+| <span id="g-物联网"></span>物联网 | Internet of Things (IoT) | 把传感器、摄像头、电表、家电等各种物品连入网络的技术 | 智能电表自动上传读数 |
+| <span id="g-智能运维"></span>智能运维 | AIOps | 用人工智能做网络和系统运维，如异常检测、故障预测、告警归并、日志分析 | 模型预测光模块即将故障 |
+

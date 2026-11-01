@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>故障排查闯关</title>
+<link rel="stylesheet" href="../common/sim.css">
+<style>
+.term { background:#1e1e1e; color:#d4d4d4; font-family:Consolas,"JetBrains Mono",monospace; font-size:12.5px; border-radius:6px; padding:8px 10px; height:230px; overflow-y:auto; white-space:pre-wrap; }
+.term .cmd { color:#4fc3f7; }
+.cmds button { font-size:12.5px; }
+.cmds button.used { background:var(--soft); }
+.opts button { display:block; width:100%; text-align:left; margin:4px 0; border-radius:6px; }
+.sym { background:#fff8e1; border-left:4px solid #ffa000; padding:6px 10px; border-radius:4px; font-size:14px; }
+</style>
+</head>
+<body>
+<h1>故障排查闯关：从物理层往上，一步步找到原因</h1>
+<div class="sub">5 个故障发生在工作室不同员工的电脑上（设计部电脑的正常配置：IP 192.168.8.x/26，网关 192.168.8.1，DNS 192.168.8.130；分店网段 192.168.9.0/24）。选择排查手段查看结果，再判断故障原因。命令输出为<b>输出格式示意</b>。</div>
+<div class="row"><span id="lv" class="big" style="font-size:15px"></span><span class="note" id="sc"></span></div>
+<div class="sym" id="sym"></div>
+<div class="grid2">
+  <div class="box"><h2>排查手段（建议从上往下试）</h2><div class="row cmds" id="cmds"></div><div class="term" id="term"></div></div>
+  <div class="box"><h2>你认为故障原因是？</h2><div class="opts" id="opts"></div><div class="msg" id="msg"></div>
+    <div class="row"><button id="nx" class="main">下一关</button><button id="again">重新开始</button></div></div>
+</div>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var C = [
+    ["light", "看网线和指示灯"], ["ipconfig", "ipconfig"], ["lo", "ping 127.0.0.1"], ["gw", "ping 网关"],
+    ["ext", "ping 203.0.113.10（外网 IP）"], ["dns", "nslookup www.xiaohe.com"], ["tr", "tracert 203.0.113.10"]
+  ];
+  var OK_LO = "正在 Ping 127.0.0.1 具有 32 字节的数据:\n来自 127.0.0.1 的回复: 字节=32 时间<1ms TTL=128\n……\n    数据包: 已发送 = 4，已接收 = 4，丢失 = 0 (0% 丢失)";
+  function okPing(ip, ttl) { return "正在 Ping " + ip + " 具有 32 字节的数据:\n来自 " + ip + " 的回复: 字节=32 时间=1ms TTL=" + ttl + "\n……\n    数据包: 已发送 = 4，已接收 = 4，丢失 = 0 (0% 丢失)"; }
+  function toPing(ip) { return "正在 Ping " + ip + " 具有 32 字节的数据:\n请求超时。\n请求超时。\n……\n    数据包: 已发送 = 4，已接收 = 0，丢失 = 4 (100% 丢失)"; }
+  function ipc(ip, mask, gw) { return "以太网适配器 以太网:\n   IPv4 地址 . . . . . . . . . . . . : " + ip + "\n   子网掩码  . . . . . . . . . . . . : " + mask + "\n   默认网关. . . . . . . . . . . . . : " + gw; }
+  var IPC_OK = ipc("192.168.8.11", "255.255.255.192", "192.168.8.1");
+  var DNS_OK = "服务器:  UnKnown\nAddress:  192.168.8.130\n\n名称:    www.xiaohe.com\nAddress:  192.168.8.130";
+  var TR_OK = "通过最多 30 个跃点跟踪到 203.0.113.10 的路由\n  1    <1 毫秒   <1 毫秒   <1 毫秒  192.168.8.1\n  2     1 ms     1 ms     1 ms  198.51.100.1\n  3     2 ms     1 ms     1 ms  203.0.113.10\n跟踪完成。";
+  var OPTS = ["物理层：网线松了或网卡被禁用", "没有获取到 IP 地址（DHCP 出了问题）", "默认网关设置错误", "DNS 服务器故障或设置错误", "路由器上缺少去往目的网络的路由"];
+  var L = [
+    { sym: "小林：“早上来电脑一开就上不了网，微信、网页都不行。”", ans: 0,
+      out: { light: "网卡接口的指示灯不亮；顺着网线摸到交换机，发现插头没插紧。", ipconfig: "以太网适配器 以太网:\n   媒体状态  . . . . . . . . . . . . : 媒体已断开连接", lo: OK_LO, gw: "PING: 传输失败。常见故障。", ext: "PING: 传输失败。常见故障。", dns: "DNS request timed out.\n*** 没有可用的服务器", tr: "无法解析或连接，传输失败。" },
+      why: "ipconfig 显示“媒体已断开连接”、指示灯不亮，问题在物理层。ping 127.0.0.1 正常说明本机的网络协议没问题。把网线插紧（或换一根网线、换一个交换机接口）即可。排查要从最底层开始，先看灯、看线。" },
+    { sym: "新来的实习生小周：“我的电脑接上网线了，可是什么都打不开。”", ans: 1,
+      out: { light: "指示灯正常，绿灯常亮、黄灯闪烁。", ipconfig: ipc("169.254.23.45", "255.255.0.0", "") + "\n   （自动配置 IPv4 地址）", lo: OK_LO, gw: "PING: 传输失败。常见故障。", ext: "PING: 传输失败。常见故障。", dns: "DNS request timed out.\n*** 没有可用的服务器", tr: "传输失败。" },
+      why: "地址是 169.254.x.x、没有网关，说明电脑向 DHCP 服务器要地址失败，只好自己给自己配了一个（[8.3 节](#)）。应检查 DHCP 服务器（路由器的地址池）是否正常、地址池是否用完、交换机接口是否在正确的 VLAN。临时可以手工配置地址。" },
+    { sym: "阿美昨天自己改了电脑的 IP 设置，今天：“能访问同事电脑上的共享文件夹，可是上不了外网，内部网站也打不开。”", ans: 2,
+      out: { light: "指示灯正常。", ipconfig: ipc("192.168.8.12", "255.255.255.192", "192.168.8.254"), lo: OK_LO, gw: "（ping 192.168.8.254）\n" + toPing("192.168.8.254") + "\n\n（改为 ping 192.168.8.1）\n" + okPing("192.168.8.1", 255), ext: toPing("203.0.113.10"), dns: "DNS request timed out.\n    timeout was 2 seconds.\n服务器:  UnKnown\nAddress:  192.168.8.130\n*** 请求 UnKnown 超时", tr: "通过最多 30 个跃点跟踪到 203.0.113.10 的路由\n  1     *        *        *     请求超时。\n  2     *        *        *     请求超时。" },
+      why: "同网段的同事能访问，说明物理层、IP 地址都正常；默认网关写成了 192.168.8.254，而真正的网关是 192.168.8.1，所以发往其他网段（服务器区、外网）的数据都送不出去。改回正确的网关即可。" },
+    { sym: "周一上午，好几个同事都说：“QQ 能用，网页一个都打不开！”", ans: 3,
+      out: { light: "指示灯正常。", ipconfig: IPC_OK, lo: OK_LO, gw: okPing("192.168.8.1", 255), ext: okPing("203.0.113.10", 126), dns: "DNS request timed out.\n    timeout was 2 seconds.\n服务器:  UnKnown\nAddress:  192.168.8.130\n*** 请求 UnKnown 超时", tr: TR_OK },
+      why: "能 ping 通外网的 IP 地址，说明物理层、地址、网关、路由都正常；nslookup 超时，说明域名解析不了。聊天软件可能直接用 IP 地址连接服务器，所以还能用。检查 DNS 服务器 192.168.8.130 是否开机、DNS 服务是否开启；临时可以把电脑的 DNS 改为另一个可用的 DNS 服务器。" },
+    { sym: "分店开张第一天，店员：“分店的电脑能打开分店自己的收银系统，就是访问不了总部的内部网站。”", ans: 4,
+      out: { light: "指示灯正常。", ipconfig: ipc("192.168.9.20", "255.255.255.0", "192.168.9.1"), lo: OK_LO, gw: okPing("192.168.9.1", 255), ext: "（ping 总部内部网站 192.168.8.130）\n正在 Ping 192.168.8.130 具有 32 字节的数据:\n来自 192.168.9.1 的回复: 无法访问目标网络。\n……", dns: "（DNS 服务器在总部，同样不可达）\nDNS request timed out.", tr: "通过最多 30 个跃点跟踪到 192.168.8.130 的路由\n  1    <1 毫秒   <1 毫秒   <1 毫秒  192.168.9.1  报告: 无法访问目标网络。\n跟踪完成。" },
+      why: "能 ping 通自己的网关，网关却回复“无法访问目标网络”，说明分店路由器的路由表里没有去往总部 192.168.8.0 的路由（[第 7 章](#)）。在分店路由器 R2 上执行 show ip route 检查，补上静态路由 ip route 192.168.8.0 255.255.255.0 10.0.12.1 或配置 OSPF。注意总部路由器也要有回分店的路由。" }
+  ];
+  var lv = 0, score = 0, used = {}, done = false;
+  function render() {
+    var q = L[lv]; used = {}; done = false;
+    $("lv").textContent = "第 " + (lv + 1) + " / " + L.length + " 关";
+    $("sc").textContent = "答对 " + score + " 关";
+    $("sym").textContent = "故障现象：" + q.sym;
+    $("cmds").innerHTML = C.map(function (c) { return '<button data-c="' + c[0] + '">' + c[1] + "</button>"; }).join("");
+    $("term").innerHTML = '<span style="color:#9e9e9e">C:\\Users\\xiaohe&gt; 点左上方的按钮执行排查……</span>';
+    $("opts").innerHTML = OPTS.map(function (o, i) { return '<button data-o="' + i + '">' + String.fromCharCode(65 + i) + ". " + o + "</button>"; }).join("");
+    $("msg").textContent = "建议顺序：看灯 → ipconfig → ping 127.0.0.1 → ping 网关 → ping 外网 IP → nslookup。"; $("nx").disabled = true;
+    Array.prototype.forEach.call(document.querySelectorAll("[data-c]"), function (b) { b.onclick = function () { run(b.dataset.c, b); }; });
+    Array.prototype.forEach.call(document.querySelectorAll("[data-o]"), function (b) { b.onclick = function () { pick(+b.dataset.o); }; });
+  }
+  function gwOf(t) { var m = t.match(/默认网关[ .]*: (\S+)/); return m ? m[1] : "192.168.8.1"; }
+  function esc(s) { return s.replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
+  function run(c, b) {
+    used[c] = 1; b.classList.add("used");
+    var label = C.filter(function (x) { return x[0] === c; })[0][1];
+    var line = c === "light" ? "（到电脑后面和交换机前看一看）" : "C:\\Users\\xiaohe> " + label.replace(/（.*）/, "").replace("网关", gwOf(L[lv].out.ipconfig));
+    $("term").innerHTML += "\n\n" + '<span class="cmd">' + esc(line) + "</span>\n" + esc(L[lv].out[c]);
+    $("term").scrollTop = $("term").scrollHeight;
+  }
+  function pick(o) {
+    if (done) return;
+    var q = L[lv], n = Object.keys(used).length;
+    if (n === 0) { $("msg").innerHTML = '<span class="bad">先排查再下结论！</span>至少执行一个排查手段。'; return; }
+    done = true; if (o === q.ans) score++;
+    $("sc").textContent = "答对 " + score + " 关";
+    $("msg").innerHTML = (o === q.ans ? '<span class="ok">判断正确！</span>' : '<span class="bad">判断错误，</span>正确答案是 ' + String.fromCharCode(65 + q.ans) + "。") + "（用了 " + n + " 个排查手段）<br>" + q.why.replace(/\[([^\]]+)\]\(#\)/g, "$1");
+    $("nx").disabled = lv >= L.length - 1;
+    if (lv === L.length - 1) $("msg").innerHTML += "<br><b>闯关结束：答对 " + score + " / " + L.length + " 关。</b>记住排查顺序：由下往上，先物理、再地址、再网关、再路由、最后 DNS 和应用。";
+  }
+  $("nx").onclick = function () { if (lv < L.length - 1) { lv++; render(); } };
+  $("again").onclick = function () { lv = 0; score = 0; render(); };
+  render();
+})();
+</script>
+<script src="../common/sim.js"></script>
+</body>
+</html>
