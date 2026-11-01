@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ARP 问路</title>
+<link rel="stylesheet" href="../common/sim.css">
+<style>
+.hosts { display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; }
+.h { border:2px solid var(--line); border-radius:8px; padding:6px; font-size:12px; transition:all .25s; }
+.h b { font-size:14px; } .h .ip { font-family:monospace; }
+.h.ask { border-color:#3f51b5; background:#e8eaf6; }
+.h.got { border-color:#ffb300; background:#fff8e1; }
+.h.reply { border-color:#43a047; background:#e8f5e9; }
+.h.evil { border-color:#e53935; }
+.h table { width:100%; border-collapse:collapse; margin-top:4px; font-family:monospace; font-size:11px; }
+.h td { border-top:1px solid var(--line); padding:1px 2px; }
+.h td.bad { color:var(--neg); font-weight:bold; }
+.pkt { font-family:monospace; font-size:12.5px; background:#f5f5f5; border-radius:6px; padding:6px 8px; margin:6px 0; white-space:pre-wrap; }
+select { font-size:13px; }
+</style>
+</head>
+<body>
+<h1>ARP 问路：谁是 192.168.1.1？</h1>
+<div class="sub">选择提问者和要问的 IP，点“下一步”逐步观察。每台主机下方是它的 ARP 缓存（IP → MAC）。</div>
+<div class="row">提问者 <select id="who"></select> 要问 <select id="tgt"></select> <button id="next">下一步</button> <button id="rst">重新开始</button>
+  <label style="font-size:13px"><input type="checkbox" id="spoof"> 打开 ARP 欺骗</label></div>
+<div class="hosts" id="hosts"></div>
+<div class="box"><h2 id="t"></h2><div class="pkt" id="pkt"></div><div class="msg" id="msg"></div></div>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var H = [{ n: "网关", ip: "192.168.1.1", mac: "00:e0:fc:12:34:01" }, { n: "小林", ip: "192.168.1.10", mac: "00:e0:4c:68:01:0a" },
+           { n: "阿美", ip: "192.168.1.20", mac: "00:e0:4c:68:01:14" }, { n: "攻击者", ip: "192.168.1.66", mac: "00:1a:2b:66:66:66", evil: true }];
+  var cache, step, who, tgt, hl, bad;
+  H.forEach(function (h, i) { if (!h.evil) $("who").add(new Option(h.n + " " + h.ip, i)); $("tgt").add(new Option(h.ip + "（" + h.n + "）", i)); });
+  $("who").value = 1; $("tgt").value = 0;
+  function reset() { cache = H.map(function () { return {}; }); bad = {}; step = 0; hl = {}; show("准备好了", "", "点“下一步”开始。"); }
+  function show(t, p, m) { $("t").textContent = t; $("pkt").textContent = p; $("pkt").style.display = p ? "" : "none"; $("msg").innerHTML = m; draw(); }
+  function draw() {
+    $("hosts").innerHTML = H.map(function (h, i) {
+      var rows = Object.keys(cache[i]).map(function (ip) { return "<tr><td>" + ip + '</td><td class="' + (bad[i + ip] ? "bad" : "") + '">' + cache[i][ip] + "</td></tr>"; }).join("") || '<tr><td colspan="2">（空）</td></tr>';
+      return '<div class="h ' + (hl[i] || "") + (h.evil ? " evil" : "") + '"><b>' + h.n + '</b><br><span class="ip">' + h.ip + "<br>" + h.mac + "</span><table>" + rows + "</table></div>";
+    }).join("");
+  }
+  function next() {
+    who = +$("who").value; tgt = +$("tgt").value;
+    var A = H[who], T = H[tgt];
+    if (who === tgt) { show("提问者和目标相同", "", "换一个要问的 IP。"); return; }
+    step++; hl = {};
+    if (step === 1) {
+      hl[who] = "ask";
+      if (cache[who][T.ip]) { show("第 1 步：查缓存", "", A.n + " 的 ARP 缓存里已经有 " + T.ip + " → " + cache[who][T.ip] + "，直接用，不必再问。" + (bad[who + T.ip] ? '<br><span class="bad">注意：这条记录是攻击者伪造的！数据会被发给攻击者。</span>' : "")); step = 99; return; }
+      show("第 1 步：查缓存", "", A.n + " 先查自己的 ARP 缓存：没有 " + T.ip + " 的记录，只好去问。");
+    } else if (step === 2) {
+      hl[who] = "ask"; H.forEach(function (h, i) { if (i !== who) hl[i] = "got"; });
+      show("第 2 步：广播 ARP 请求", "以太网帧 目的 MAC ff:ff:ff:ff:ff:ff（广播） 源 MAC " + A.mac + "\nARP 请求：谁是 " + T.ip + "？请告诉 " + A.ip + "（" + A.mac + "）", "同一网段的所有主机都收到了（黄色）。不是自己的就不理会。");
+    } else if (step === 3) {
+      hl[who] = "ask"; hl[tgt] = "reply";
+      cache[tgt][A.ip] = A.mac;
+      show("第 3 步：目标单播回答", "以太网帧 目的 MAC " + A.mac + "（单播） 源 MAC " + T.mac + "\nARP 响应：" + T.ip + " 的 MAC 是 " + T.mac, T.n + " 发现问的是自己，单播回答；同时顺便记下了提问者的地址。");
+    } else if (step === 4) {
+      cache[who][T.ip] = T.mac; hl[who] = "reply";
+      var m = A.n + " 把 " + T.ip + " → " + T.mac + " 记入缓存，之后几分钟内再通信就不用问了。";
+      if ($("spoof").checked && T.ip === "192.168.1.1") m += "<br>攻击者已经盯上了这次问答……再点“下一步”。"; else step = 99;
+      show("第 4 步：记入缓存", "", m);
+    } else if (step === 5) {
+      var E = H[3]; cache[who][T.ip] = E.mac; bad[who + T.ip] = true; hl[3] = "ask"; hl[who] = "got";
+      show("ARP 欺骗：伪造的响应", "以太网帧 目的 MAC " + A.mac + " 源 MAC " + E.mac + "\nARP 响应（伪造）：192.168.1.1 的 MAC 是 " + E.mac, '<span class="bad">ARP 不核实真假，' + A.n + " 用伪造的地址覆盖了缓存（红色）。</span>此后 " + A.n + " 发往网关的数据全部送到攻击者手里，攻击者可以偷看、篡改后再转发。防范：交换机开启 ARP 检测、绑定静态 ARP、使用 HTTPS。");
+      step = 99;
+    } else show("这一轮结束", "", "换一个提问者或目标继续，或点“重新开始”清空所有缓存。");
+    if (step === 99) step = 0;
+  }
+  $("next").onclick = next; $("rst").onclick = reset;
+  $("who").onchange = $("tgt").onchange = function () { step = 0; hl = {}; draw(); };
+  reset();
+})();
+</script>
+<script src="../common/sim.js"></script>
+</body>
+</html>

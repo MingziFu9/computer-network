@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NAT 转换表</title>
+<link rel="stylesheet" href="../common/sim.css">
+<style>
+.pkt { font-family:monospace; font-size:12.5px; background:#f5f5f5; border-radius:6px; padding:6px 8px; white-space:pre-wrap; margin:4px 0; }
+.pkt .chg { background:#ffe082; }
+table.nt { border-collapse:collapse; width:100%; font-size:12.5px; font-family:monospace; }
+table.nt th, table.nt td { border:1px solid var(--line); padding:3px 5px; text-align:center; }
+table.nt th { font-family:sans-serif; }
+tr.new td { background:#fff8e1; } tr.use td { background:#c8e6c9; }
+select { font-size:13px; }
+</style>
+</head>
+<body>
+<h1>NAT 转换表：一个公网地址，多台电脑上网</h1>
+<div class="sub">路由器内部接口接 192.168.8.0/26，外部接口只有一个公网地址 <b>198.51.100.2</b>。选一台内网电脑访问外网，看路由器怎样改写地址和端口，再看回复怎样查表送回。</div>
+<div class="row">内网电脑 <select id="pc"><option value="11">192.168.8.11 小林</option><option value="12">192.168.8.12 阿美</option><option value="13">192.168.8.13 小周</option></select>
+  访问 <select id="dst"><option value="203.0.113.10:80">203.0.113.10:80 工作室网站</option><option value="114.114.114.114:53">114.114.114.114:53 DNS</option></select>
+  <button id="go">发出请求</button><button id="back">服务器回复</button></div>
+<div class="row"><button id="evil">外网主动访问内网</button><button id="clr">清空转换表</button></div>
+<div class="grid2">
+  <div class="box"><h2 id="t">经过路由器的数据报</h2><div id="pk"></div><div class="msg" id="msg"></div></div>
+  <div class="box"><h2>NAT 转换表</h2><table class="nt"><thead><tr><th>内部地址:端口</th><th>公网地址:端口</th><th>外部地址:端口</th></tr></thead><tbody id="tb"></tbody></table></div>
+</div>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var PUB = "198.51.100.2", table = [], last = null, hl = -1, hlc = "";
+  function srcPort(pc) { return pc === "11" || pc === "12" ? 51001 : 50523; }   // 两台电脑恰好选了同一个源端口
+  function used(p) { return table.some(function (r) { return r.pp === p; }); }
+  function render() {
+    $("tb").innerHTML = table.length ? table.map(function (r, i) { return '<tr class="' + (i === hl ? hlc : "") + '"><td>' + r.ip + ":" + r.port + "</td><td>" + PUB + ":" + r.pp + "</td><td>" + r.dst + "</td></tr>"; }).join("") : '<tr><td colspan="3">（空）</td></tr>';
+  }
+  function pkt(label, s, d, chg) { return '<div class="pkt">' + label + "\n源 " + (chg === "s" ? '<span class="chg">' + s + "</span>" : s) + "  →  目的 " + (chg === "d" ? '<span class="chg">' + d + "</span>" : d) + "</div>"; }
+  $("go").onclick = function () {
+    var pc = $("pc").value, ip = "192.168.8." + pc, port = srcPort(pc), dst = $("dst").value;
+    var i = table.findIndex(function (r) { return r.ip === ip && r.port === port && r.dst === dst; }), note = "";
+    if (i < 0) {
+      var pp = port; while (used(pp)) pp++;
+      if (pp !== port) note = "端口 " + port + " 已被别的转换占用，路由器改用 " + pp + "。";
+      table.push({ ip: ip, port: port, pp: pp, dst: dst }); i = table.length - 1; hlc = "new";
+    } else hlc = "use";
+    hl = i; last = table[i];
+    $("t").textContent = "请求：内网 → 外网";
+    $("pk").innerHTML = pkt("进入路由器前（内部接口）", ip + ":" + port, dst) + pkt("离开路由器后（外部接口）", PUB + ":" + last.pp, dst, "s");
+    $("msg").innerHTML = (hlc === "new" ? "新建一行转换记录（黄色）。" : "已有记录，直接使用（绿色）。") + "源地址换成公网地址 " + PUB + "。" + note;
+    render();
+  };
+  $("back").onclick = function () {
+    if (!last) { $("msg").textContent = "先让一台内网电脑发出请求。"; return; }
+    hl = table.indexOf(last); hlc = "use";
+    $("t").textContent = "回复：外网 → 内网";
+    $("pk").innerHTML = pkt("到达路由器时（外部接口）", last.dst, PUB + ":" + last.pp) + pkt("查表改写后（内部接口）", last.dst, last.ip + ":" + last.port, "d");
+    $("msg").innerHTML = "服务器只知道 " + PUB + ":" + last.pp + "。路由器按端口 " + last.pp + " 查表，找到 " + last.ip + ":" + last.port + "，把目的地址和端口改回去交给它。";
+    render();
+  };
+  $("evil").onclick = function () {
+    hl = -1; render();
+    $("t").textContent = "外网主动访问内网";
+    $("pk").innerHTML = pkt("外网主机 203.0.113.20 发来", "203.0.113.20:40000", PUB + ":3389");
+    $("msg").innerHTML = '<span class="bad">转换表里没有端口 3389 的记录，路由器不知道该交给谁，只能丢弃。</span>这就是“NAT 后面的主机不能被外网主动访问”。想让外网访问内网的某台服务器，要在路由器上手工设置端口映射。';
+  };
+  $("clr").onclick = function () { table = []; last = null; hl = -1; render(); $("pk").innerHTML = ""; $("msg").textContent = "转换表已清空（实际中表项在连接结束或超时后自动删除）。"; };
+  render(); $("msg").textContent = "先选一台电脑点“发出请求”，再让小林和阿美都访问网站，看端口冲突时路由器怎么办。";
+})();
+</script>
+<script src="../common/sim.js"></script>
+</body>
+</html>

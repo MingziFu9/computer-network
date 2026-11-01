@@ -226,6 +226,22 @@ description: 本书主要术语的中英文名称、简明定义和例子，按�
 
 | 术语 | 英文 | 定义 | 例子 |
 |---|---|---|---|
+| <span id="g-ARP"></span>ARP | Address Resolution Protocol | 地址解析协议：已知同一网段内主机的 IP 地址，查出它的 MAC 地址 | “谁是 192.168.1.1？请告诉 192.168.1.181” |
+| <span id="g-ARP-缓存"></span>ARP 缓存 | ARP Cache | 主机保存的 IP 地址与 MAC 地址对照表，条目过几分钟自动删除 | arp -a 的输出 |
+| <span id="g-ARP-欺骗"></span>ARP 欺骗 | ARP Spoofing | 攻击者发送伪造的 ARP 响应冒充他人，截获或篡改通信的攻击 | 冒充网关的中间人攻击 |
+| <span id="g-ICMP"></span>ICMP | Internet Control Message Protocol | 网际控制报文协议：报告 IP 传输中的差错或询问情况，装在 IP 数据报中传送 | ping、tracert 用到的协议 |
+| <span id="g-回送请求"></span>回送请求 | Echo Request | ICMP 类型 8，询问对方是否可达 | ping 发出的请求 |
+| <span id="g-回送回答"></span>回送回答 | Echo Reply | ICMP 类型 0，对回送请求的回复 | ping 收到的 Reply |
+| <span id="g-终点不可达"></span>终点不可达 | Destination Unreachable | ICMP 类型 3，路由器找不到路或目的主机无对应服务时发出 | 路由表中没有匹配路由 |
+| <span id="g-时间超过"></span>时间超过 | Time Exceeded | ICMP 类型 11，数据报 TTL 减到 0 被丢弃时发出 | “TTL 传输中过期” |
+| <span id="g-DHCP"></span>DHCP | Dynamic Host Configuration Protocol | 动态主机配置协议：自动为主机分配 IP 地址、掩码、网关和 DNS 服务器 | 笔记本插上网线就有了地址 |
+| <span id="g-地址池"></span>地址池 | Address Pool | DHCP 服务器可以分配出去的一组地址 | 192.168.8.11～192.168.8.62 |
+| <span id="g-租期"></span>租期 | Lease Time | DHCP 分配的地址可以使用的期限，过半时客户机申请续租 | 12 小时（43 200 秒） |
+| <span id="g-DHCP-中继"></span>DHCP 中继 | DHCP Relay | 路由器把 DHCP 广播转发给其他网段的 DHCP 服务器，使一台服务器服务多个网段 | 三层交换机上的 ip helper-address |
+| <span id="g-NAT"></span>NAT | Network Address Translation | 网络地址转换：在出口路由器把私有地址替换为公网地址 | 家里所有设备共用一个公网地址上网 |
+| <span id="g-端口地址转换"></span>端口地址转换 | Port Address Translation | 同时转换 IP 地址和端口号的 NAT，一个公网地址可供多台主机使用，简称 PAT 或 NAPT | ip nat inside source ... overload |
+| <span id="g-NAT-转换表"></span>NAT 转换表 | NAT Translation Table | NAT 路由器记录内部地址端口与公网地址端口对应关系的表 | show ip nat translations 的输出 |
+| <span id="g-运营商级-NAT"></span>运营商级 NAT | Carrier-Grade NAT | 运营商在其网络出口为大量用户统一做的 NAT | 手机上网拿到 100.64.x.x 地址 |
 
 ## 第 9 章 传输层：TCP 与 UDP
 

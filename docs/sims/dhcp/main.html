@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DHCP 四步</title>
+<link rel="stylesheet" href="../common/sim.css">
+<style>
+.steps { display:grid; grid-template-columns:repeat(4, 1fr); gap:6px; margin:8px 0; }
+.st { border:2px solid var(--line); border-radius:8px; padding:6px; text-align:center; font-size:13px; color:var(--muted); }
+.st.on { border-color:var(--accent); color:var(--ink); background:#e8eaf6; }
+.st.ok { border-color:var(--pos); color:var(--ink); background:#e8f5e9; }
+.pkt { font-family:monospace; font-size:12.5px; background:#f5f5f5; border-radius:6px; padding:6px 8px; white-space:pre-wrap; }
+table.pool { border-collapse:collapse; font-size:12px; width:100%; font-family:monospace; }
+table.pool td, table.pool th { border:1px solid var(--line); padding:2px 5px; text-align:center; }
+td.use { background:#c8e6c9; } td.off { background:#fff8e1; } td.ex { background:#eceff1; color:#999; }
+.mode button.on { background:var(--accent); color:#fff; }
+</style>
+</head>
+<body>
+<h1>DHCP 四步：新电脑怎样拿到地址</h1>
+<div class="sub">新电脑接入网络时没有 IP 地址，也不知道 DHCP 服务器在哪。点“下一步”看四个报文：发现、提供、请求、确认（DORA）。</div>
+<div class="row mode"><span>情形：</span><button data-m="1" class="on">一台服务器</button><button data-m="2">两台服务器</button><button data-m="0">服务器关机</button>
+  <button id="next">下一步</button><button id="rst">新电脑再接入一台</button></div>
+<div class="steps" id="steps"></div>
+<div class="grid2">
+  <div class="box"><h2 id="t"></h2><div class="pkt" id="pkt"></div><div class="msg" id="msg"></div></div>
+  <div class="box"><h2>服务器 192.168.1.1 的地址池（.100～.111 节选）</h2><table class="pool" id="pool"></table><div class="note">灰色：排除不分配 · 黄色：已提供、等待确认 · 绿色：已租出</div><div class="note" id="pc"></div></div>
+</div>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var NAMES = ["① 发现 Discover", "② 提供 Offer", "③ 请求 Request", "④ 确认 ACK"];
+  var mode = 1, step = 0, pcN = 0, pool = {}, offered = null, macs = ["00:e0:4c:68:01:0a", "00:e0:4c:68:01:14", "00:e0:4c:68:01:1e", "00:e0:4c:68:01:28"];
+  for (var i = 100; i < 112; i++) pool[i] = i < 102 ? "ex" : "";
+  function addr() { for (var i = 102; i < 112; i++) if (!pool[i]) return i; return null; }
+  function render() {
+    $("steps").innerHTML = NAMES.map(function (n, i) { return '<div class="st ' + (i < step - 1 ? "ok" : i === step - 1 ? "on" : "") + '">' + n + "</div>"; }).join("");
+    var h = "<tr>", k = 0; for (var a = 100; a < 112; a++) { h += '<td class="' + (pool[a] === "ex" ? "ex" : pool[a] === "off" ? "off" : pool[a] ? "use" : "") + '">.' + a + (pool[a] && pool[a] !== "ex" && pool[a] !== "off" ? "<br>" + pool[a] : "") + "</td>"; if (++k % 6 === 0) h += "</tr><tr>"; }
+    $("pool").innerHTML = h + "</tr>";
+    $("pc").textContent = "当前新电脑：PC" + (pcN + 1) + "（MAC " + macs[pcN % 4] + "）";
+  }
+  function show(t, p, m) { $("t").textContent = t; $("pkt").textContent = p; $("msg").innerHTML = m; render(); }
+  function next() {
+    var mac = macs[pcN % 4], name = "PC" + (pcN + 1);
+    step++;
+    if (step === 1) { show(NAMES[0], "源 IP 0.0.0.0  →  目的 IP 255.255.255.255（广播）\n源 MAC " + mac + " → 目的 MAC ff:ff:ff:ff:ff:ff\n内容：有 DHCP 服务器吗？我需要一个地址", name + " 还没有地址，只能用 0.0.0.0 作源地址、用广播去找服务器。"); return; }
+    if (mode === 0) {
+      show("等不到回答……", "（没有任何 Offer）", name + " 重试几次后放弃，Windows 自己配置一个 <b>169.254.x.x</b> 的链路本地地址。它只能和同网段同样没拿到地址的电脑通信，不能上网。看到它，就去检查网线和 DHCP 服务器。"); step = 9; return;
+    }
+    if (step === 2) {
+      var a = addr(); if (a === null) { show("地址池用完了", "", "服务器没有空闲地址可以提供。实际中要扩大地址池或缩短租期。"); step = 9; return; }
+      offered = a; pool[a] = "off";
+      show(NAMES[1], "源 IP 192.168.1.1  →  目的 " + name + "\n内容：可以给你 192.168.1." + a + "，掩码 255.255.255.0，网关 192.168.1.1，DNS 203.0.113.10，租期 12 小时" + (mode === 2 ? "\n\n（另一台服务器 192.168.1.2 也发来 Offer：可以给你 192.168.1.150）" : ""),
+        "服务器从地址池里挑一个空闲地址，先“预留”（黄色）。" + (mode === 2 ? "<br>网络里有两台 DHCP 服务器，" + name + " 收到了两个 Offer，一般选最先到达的那个。" : ""));
+      return;
+    }
+    if (step === 3) { show(NAMES[2], "源 IP 0.0.0.0  →  目的 IP 255.255.255.255（广播）\n内容：我要服务器 192.168.1.1 提供的 192.168.1." + offered, "为什么还要广播？让所有服务器都知道“我选了 192.168.1.1”。" + (mode === 2 ? "没被选中的 192.168.1.2 收回它预留的 .150。" : "") + "此时 " + name + " 仍然没有正式的地址。"); return; }
+    if (step === 4) { pool[offered] = name; show(NAMES[3], "源 IP 192.168.1.1  →  目的 " + name + "\n内容：确认，192.168.1." + offered + " 归你了，租期 12 小时", name + " 正式使用 192.168.1." + offered + "。接下来它通常会用 ARP 问出网关的 MAC 地址（第 8.1 节），然后就能上网了。租期过半（6 小时）时它会申请续租。"); return; }
+    show("这台电脑已经拿到地址", "", "点“新电脑再接入一台”，看地址池怎样一个个分出去。");
+  }
+  $("next").onclick = next;
+  $("rst").onclick = function () { if (step >= 4 && mode !== 0) pcN++; step = 0; offered = null; for (var a in pool) if (pool[a] === "off") pool[a] = ""; show("新电脑接入", "", "点“下一步”开始。"); };
+  Array.prototype.forEach.call(document.querySelectorAll("[data-m]"), function (b) {
+    b.onclick = function () { mode = +b.dataset.m; Array.prototype.forEach.call(document.querySelectorAll("[data-m]"), function (x) { x.className = x === b ? "on" : ""; }); step = 0; for (var a in pool) if (pool[a] === "off") pool[a] = ""; show("新电脑接入", "", "点“下一步”开始。"); };
+  });
+  show("新电脑接入", "", "点“下一步”开始。");
+})();
+</script>
+<script src="../common/sim.js"></script>
+</body>
+</html>
