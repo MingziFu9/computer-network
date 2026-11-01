@@ -69,6 +69,8 @@ nav:
     - "ARP 问路": sims/arp/index.md
     - "DHCP 四步": sims/dhcp/index.md
     - "NAT 转换表": sims/nat-table/index.md
+    - "三次握手与四次挥手": sims/handshake/index.md
+    - "滑动窗口与拥塞控制": sims/sliding-window/index.md
   - 学习图谱: learning-graph/index.md
   - 常见问题: faq/index.md
   - "在线模拟卷": mock-exam.md

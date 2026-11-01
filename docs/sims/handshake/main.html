@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>三次握手与四次挥手</title>
+<link rel="stylesheet" href="../common/sim.css">
+<style>
+#tl { width:100%; height:auto; display:block; }
+.st { display:inline-block; padding:1px 8px; border-radius:10px; background:var(--soft); color:var(--accent); font-family:monospace; font-size:12.5px; }
+.flag { display:inline-block; padding:0 6px; margin-right:3px; border-radius:4px; color:#fff; font-size:12px; font-family:monospace; }
+.f-SYN { background:#3f51b5; } .f-ACK { background:#43a047; } .f-FIN { background:#e53935; } .f-PSH { background:#ef6c00; }
+table.t td.k { text-align:left; color:var(--muted); }
+table.t td.v { text-align:left; font-family:monospace; }
+</style>
+</head>
+<body>
+<h1>三次握手与四次挥手：一条 TCP 连接的一生</h1>
+<div class="sub">数据来自抓包文件 tcp_udp_chat.pcap 第 1～14 帧：小林的电脑（端口 43108）连接聊天服务器（端口 9000），发两句话，然后由服务器先关闭连接。</div>
+<div class="row">
+  <button id="prev">上一步</button><button id="next" class="main">下一步</button><button id="all">全部显示</button><button id="reset">重来</button>
+  <label style="font-size:13px"><input type="checkbox" id="raw"> 显示真实序号</label>
+  <span id="phase" class="st"></span>
+</div>
+<div class="grid2">
+  <div class="box"><svg id="tl" viewBox="0 0 420 470"></svg></div>
+  <div class="box">
+    <h2 id="ttl">报文段详情</h2>
+    <table class="t" style="width:100%"><tbody id="det"></tbody></table>
+    <div class="row" style="margin-top:8px">客户端状态 <span class="st" id="cs">CLOSED</span>　服务器状态 <span class="st" id="ss">LISTEN</span></div>
+    <div class="msg" id="msg"></div>
+  </div>
+</div>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var C0 = 1314535487, S0 = 1250116542;   // 两端的初始序号（第 1、2 帧中的真实值）
+  // dir: 1 = 客户端→服务器，-1 = 服务器→客户端；seq/ack 为相对序号
+  var F = [
+    { n:1, dir:1, fl:["SYN"], seq:0, ack:null, len:0, cs:"SYN-SENT", ss:"LISTEN", ph:"三次握手", m:"① 客户端发 SYN，随机选一个初始序号。SYN 不带数据，但要占用一个序号。客户端进入 SYN-SENT（已发出连接请求）。" },
+    { n:2, dir:-1, fl:["SYN","ACK"], seq:0, ack:1, len:0, cs:"SYN-SENT", ss:"SYN-RCVD", ph:"三次握手", m:"② 服务器同意连接，回 SYN+ACK：确认号 = 对方序号 0 + 1 = 1，同时选自己的初始序号。服务器进入 SYN-RCVD。" },
+    { n:3, dir:1, fl:["ACK"], seq:1, ack:1, len:0, cs:"ESTABLISHED", ss:"ESTABLISHED", ph:"三次握手", m:"③ 客户端回 ACK，确认号 = 0 + 1 = 1。双方都确认了自己和对方的收发正常，进入 ESTABLISHED（连接已建立）。" },
+    { n:4, dir:1, fl:["PSH","ACK"], seq:1, ack:1, len:21, txt:"你好，我是小林", cs:"ESTABLISHED", ss:"ESTABLISHED", ph:"数据传输", m:"客户端发 21 字节数据（一个汉字或全角标点在 UTF-8 中占 3 字节，7 个字符共 21 字节），占用第 1～21 字节。" },
+    { n:5, dir:-1, fl:["ACK"], seq:1, ack:22, len:0, cs:"ESTABLISHED", ss:"ESTABLISHED", ph:"数据传输", m:"服务器确认：确认号 = 1 + 21 = 22，意思是“前 21 字节收到了，请从第 22 字节发”。" },
+    { n:6, dir:-1, fl:["PSH","ACK"], seq:1, ack:22, len:30, txt:"收到：你好，我是小林", cs:"ESTABLISHED", ss:"ESTABLISHED", ph:"数据传输", m:"服务器回 30 字节。两个方向的序号各自独立编号，服务器这边也从 1 开始。" },
+    { n:7, dir:1, fl:["ACK"], seq:22, ack:31, len:0, cs:"ESTABLISHED", ss:"ESTABLISHED", ph:"数据传输", m:"客户端确认：确认号 = 1 + 30 = 31。" },
+    { n:8, dir:1, fl:["PSH","ACK"], seq:22, ack:31, len:18, txt:"今晚六点开会", cs:"ESTABLISHED", ss:"ESTABLISHED", ph:"数据传输", m:"客户端从第 22 字节起再发 18 字节。" },
+    { n:9, dir:-1, fl:["PSH","ACK"], seq:31, ack:40, len:27, txt:"收到：今晚六点开会", cs:"ESTABLISHED", ss:"ESTABLISHED", ph:"数据传输", m:"捎带确认：服务器发数据的同时带上确认号 40（= 22 + 18），不再单独发一个确认。" },
+    { n:10, dir:1, fl:["ACK"], seq:40, ack:58, len:0, cs:"ESTABLISHED", ss:"ESTABLISHED", ph:"数据传输", m:"客户端确认：确认号 = 31 + 27 = 58。" },
+    { n:11, dir:-1, fl:["FIN","ACK"], seq:58, ack:40, len:0, cs:"ESTABLISHED", ss:"FIN-WAIT-1", ph:"四次挥手", m:"① 服务器先关闭：发 FIN，表示“我这个方向的数据发完了”。FIN 也占用一个序号。服务器进入 FIN-WAIT-1。" },
+    { n:12, dir:1, fl:["ACK"], seq:40, ack:59, len:0, cs:"CLOSE-WAIT", ss:"FIN-WAIT-2", ph:"四次挥手", m:"② 客户端确认：确认号 = 58 + 1 = 59。服务器→客户端方向关闭了，但客户端→服务器方向还能发数据。客户端进入 CLOSE-WAIT，服务器进入 FIN-WAIT-2。" },
+    { n:13, dir:1, fl:["FIN","ACK"], seq:40, ack:59, len:0, cs:"LAST-ACK", ss:"FIN-WAIT-2", ph:"四次挥手", m:"③ 客户端也没有数据要发了，发 FIN，进入 LAST-ACK（等最后一个确认）。" },
+    { n:14, dir:-1, fl:["ACK"], seq:59, ack:41, len:0, cs:"CLOSED", ss:"TIME-WAIT", ph:"四次挥手", m:"④ 服务器确认：确认号 = 40 + 1 = 41。客户端收到后关闭。先发 FIN 的服务器进入 TIME-WAIT，再等 2 倍报文最长寿命才关闭，以防这个确认丢失后对方重发 FIN。" }
+  ];
+  var k = 0;
+  function rs(v, fromClient) { if (v === null) return "—"; if (!$("raw").checked) return String(v); return String(v + (fromClient ? C0 : S0)); }
+  function seqOf(f) { return rs(f.seq, f.dir === 1); }
+  function ackOf(f) { return f.ack === null ? "—" : rs(f.ack, f.dir !== 1); }
+  function draw() {
+    var X1 = 70, X2 = 350, top = 40, dy = 30, s = "";
+    s += '<text x="' + X1 + '" y="18" text-anchor="middle" font-size="13" font-weight="bold">客户端（小林）</text>';
+    s += '<text x="' + X1 + '" y="32" text-anchor="middle" font-size="11" fill="#78909c">端口 43108</text>';
+    s += '<text x="' + X2 + '" y="18" text-anchor="middle" font-size="13" font-weight="bold">服务器</text>';
+    s += '<text x="' + X2 + '" y="32" text-anchor="middle" font-size="11" fill="#78909c">端口 9000</text>';
+    s += '<line x1="' + X1 + '" y1="' + top + '" x2="' + X1 + '" y2="465" stroke="#90a4ae" stroke-width="2"/>';
+    s += '<line x1="' + X2 + '" y1="' + top + '" x2="' + X2 + '" y2="465" stroke="#90a4ae" stroke-width="2"/>';
+    s += '<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="context-stroke"/></marker></defs>';
+    // 阶段分隔
+    [[3, "三次握手"], [10, "数据传输"], [14, "四次挥手"]].forEach(function (p, i) {
+      var y0 = top + (i === 0 ? 0 : [0, 3, 10][i]) * dy + 4, y1 = top + p[0] * dy + 4;
+      s += '<rect x="2" y="' + y0 + '" width="6" height="' + (y1 - y0 - 2) + '" fill="' + ["#3f51b5", "#ef6c00", "#e53935"][i] + '" opacity=".35"/>';
+    });
+    for (var i = 0; i < k; i++) {
+      var f = F[i], y = top + 12 + i * dy, a = f.dir === 1 ? X1 : X2, b = f.dir === 1 ? X2 : X1;
+      var col = f.fl.indexOf("SYN") >= 0 ? "#3f51b5" : f.fl.indexOf("FIN") >= 0 ? "#e53935" : f.len ? "#ef6c00" : "#43a047";
+      var cur = i === k - 1;
+      s += '<line x1="' + a + '" y1="' + (y + 4) + '" x2="' + b + '" y2="' + (y + 20) + '" stroke="' + col + '" stroke-width="' + (cur ? 3 : 1.6) + '" marker-end="url(#ah)"/>';
+      var lab = f.fl.join("+") + (f.len ? " " + f.len + "B" : "") + "  seq=" + seqOf(f) + (f.ack !== null ? " ack=" + ackOf(f) : "");
+      s += '<text x="210" y="' + (y + 3) + '" paint-order="stroke" stroke="#fff" stroke-width="4" text-anchor="middle" font-size="' + ($("raw").checked ? 9.5 : 11) + '" fill="' + col + '"' + (cur ? ' font-weight="bold"' : "") + ">" + lab + "</text>";
+    }
+    $("tl").innerHTML = s;
+  }
+  function show() {
+    draw();
+    $("prev").disabled = k === 0; $("next").disabled = k === F.length; $("all").disabled = k === F.length;
+    if (k === 0) {
+      $("ttl").textContent = "报文段详情"; $("det").innerHTML = ""; $("cs").textContent = "CLOSED"; $("ss").textContent = "LISTEN";
+      $("phase").textContent = "准备";
+      $("msg").textContent = "服务器程序已经在 9000 端口等待连接（LISTEN）。点“下一步”开始。"; return;
+    }
+    var f = F[k - 1];
+    $("ttl").textContent = "第 " + f.n + " 帧：" + (f.dir === 1 ? "客户端 → 服务器" : "服务器 → 客户端");
+    var rows = [["标志位", f.fl.map(function (x) { return '<span class="flag f-' + x + '">' + x + "</span>"; }).join("")],
+      ["序号 seq", seqOf(f)], ["确认号 ack", ackOf(f)], ["数据长度", f.len + " 字节"]];
+    if (f.txt) rows.push(["数据内容", f.txt]);
+    $("det").innerHTML = rows.map(function (r) { return '<tr><td class="k">' + r[0] + '</td><td class="v">' + r[1] + "</td></tr>"; }).join("");
+    $("cs").textContent = f.cs; $("ss").textContent = f.ss; $("phase").textContent = f.ph + "（" + k + "/" + F.length + "）";
+    $("msg").textContent = f.m + ($("raw").checked ? "（说明中的算式按相对序号写，真实序号 = 相对序号 + 初始序号。）" : "");
+  }
+  $("next").onclick = function () { if (k < F.length) { k++; show(); } };
+  $("prev").onclick = function () { if (k > 0) { k--; show(); } };
+  $("all").onclick = function () { k = F.length; show(); };
+  $("reset").onclick = function () { k = 0; show(); };
+  $("raw").onchange = show;
+  show();
+})();
+</script>
+<script src="../common/sim.js"></script>
+</body>
+</html>

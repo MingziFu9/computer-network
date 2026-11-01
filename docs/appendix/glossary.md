@@ -247,6 +247,32 @@ description: 本书主要术语的中英文名称、简明定义和例子，按�
 
 | 术语 | 英文 | 定义 | 例子 |
 |---|---|---|---|
+| <span id="g-运输层"></span>运输层 | Transport Layer | 也叫传输层，在两台主机的进程之间提供端到端的通信服务，主要协议是 TCP 和 UDP | 网页、聊天、下载的数据都要经过运输层 |
+| <span id="g-进程"></span>进程 | Process | 正在运行的程序，是运输层通信的真正双方 | 同时打开的浏览器和微信是两个进程 |
+| <span id="g-端口号"></span>端口号 | Port Number | 16 位的编号（0～65535），用来区分同一台主机上的不同进程，相当于公司的分机号 | 网页服务器默认用 80 端口 |
+| <span id="g-熟知端口"></span>熟知端口 | Well-known Port | 0～1023 号端口，固定分配给常用的服务器程序 | HTTP 80、HTTPS 443、DNS 53 |
+| <span id="g-套接字"></span>套接字 | Socket | IP 地址加端口号，唯一标识网络中的一个通信端点；也指程序进行网络通信的编程接口 | 192.168.1.10:43108 |
+| <span id="g-UDP"></span>UDP | User Datagram Protocol | 用户数据报协议，无连接、不保证可靠交付、首部只有 8 字节，简单快速 | DNS 查询、视频会议常用 UDP |
+| <span id="g-TCP"></span>TCP | Transmission Control Protocol | 传输控制协议，面向连接、可靠、面向字节流，提供流量控制和拥塞控制 | 网页浏览、文件下载用 TCP |
+| <span id="g-面向连接"></span>面向连接 | Connection-oriented | 通信前先建立连接、通信后释放连接的工作方式 | TCP 先三次握手再传数据 |
+| <span id="g-序号"></span>序号 | Sequence Number | TCP 首部字段，表示本报文段数据第一个字节的编号；TCP 对每个字节编号 | 第 4 帧序号为 1，表示从第 1 个字节开始 |
+| <span id="g-确认号"></span>确认号 | Acknowledgment Number | TCP 首部字段，表示期望收到对方下一个字节的编号，即之前的数据都已收到 | 确认号 22 表示前 21 个字节都收到了 |
+| <span id="g-SYN"></span>SYN | Synchronize | TCP 标志位，置 1 表示请求建立连接 | 三次握手的第一个报文段只带 SYN |
+| <span id="g-ACK"></span>ACK | Acknowledgment | TCP 标志位，置 1 表示确认号字段有效；连接建立后的报文段 ACK 都为 1 | 三次握手的第三个报文段是纯 ACK |
+| <span id="g-FIN"></span>FIN | Finish | TCP 标志位，置 1 表示本方数据已发送完毕，请求释放这个方向的连接 | 四次挥手的第一个报文段带 FIN |
+| <span id="g-三次握手"></span>三次握手 | Three-way Handshake | TCP 建立连接的过程：SYN、SYN+ACK、ACK 三个报文段 | tcp_udp_chat.pcap 第 1～3 帧 |
+| <span id="g-四次挥手"></span>四次挥手 | Four-way Wave | TCP 释放连接的过程：两个方向各发一个 FIN 并各得到一个确认 | tcp_udp_chat.pcap 第 11～14 帧 |
+| <span id="g-捎带确认"></span>捎带确认 | Piggybacking | 在发送数据的同时把确认号一起带上，不单独发确认报文 | tcp_udp_chat.pcap 第 9 帧 |
+| <span id="g-超时重传"></span>超时重传 | Retransmission on Timeout | 发送方在规定时间内没有收到确认，就重新发送该报文段 | 挂号信过期没收到回执就再寄一封 |
+| <span id="g-滑动窗口"></span>滑动窗口 | Sliding Window | 允许连续发送窗口内的多个报文段而不必逐个等待确认，收到确认后窗口向前滑动 | 窗口为 4 时可连发 4 个报文段 |
+| <span id="g-流量控制"></span>流量控制 | Flow Control | 接收方通过窗口字段限制发送方的速率，防止接收缓存溢出 | 接收方把窗口减为 0，让发送方暂停 |
+| <span id="g-拥塞控制"></span>拥塞控制 | Congestion Control | 发送方根据网络拥堵情况调整发送速率，防止过多数据注入网络 | 发生超时后拥塞窗口重置为 1 |
+| <span id="g-拥塞窗口"></span>拥塞窗口 | Congestion Window (cwnd) | 发送方根据网络情况维护的变量，实际发送窗口取它和接收窗口中较小的一个 | cwnd 为 8 表示一轮最多发 8 个报文段 |
+| <span id="g-慢开始"></span>慢开始 | Slow Start | 拥塞窗口从 1 开始、每个往返时间翻倍增长，直到达到慢开始门限 | 1、2、4、8、16 |
+| <span id="g-拥塞避免"></span>拥塞避免 | Congestion Avoidance | 拥塞窗口达到门限后每个往返时间只加 1，缓慢增长 | 16、17、18、19 |
+| <span id="g-快重传"></span>快重传 | Fast Retransmit | 连续收到 3 个重复确认时立即重传丢失的报文段，不等计时器超时 | 收到 3 个确认号都是 5 的确认，马上重传 5 号 |
+| <span id="g-快恢复"></span>快恢复 | Fast Recovery | 快重传后把门限减为当前拥塞窗口的一半，拥塞窗口直接设为新门限，进入拥塞避免 | cwnd 12 时收到 3 个重复确认，门限和 cwnd 都变为 6 |
+| <span id="g-QUIC"></span>QUIC | QUIC | 基于 UDP、在应用层实现可靠传输和加密的新型运输协议，是 HTTP/3 的基础 | 在浏览器开发者工具中能看到 h3 协议 |
 
 ## 第 10 章 应用层：域名、网页与常用服务
 
