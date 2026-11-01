@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>协议对号入座</title>
+<link rel="stylesheet" href="../common/sim.css">
+<style>
+.pool { min-height:44px; border:1px dashed var(--line); border-radius:8px; padding:6px; }
+.card { display:inline-block; padding:3px 9px; margin:3px; border-radius:12px; background:#fff; border:1px solid var(--accent); color:var(--accent); cursor:pointer; user-select:none; font-size:13px; }
+.card.sel { background:var(--accent); color:#fff; }
+.card.ok { border-color:var(--pos); color:var(--pos); } .card.bad { border-color:var(--neg); color:var(--neg); background:#ffebee; }
+.layer { display:grid; grid-template-columns:7em 1fr; gap:6px; align-items:stretch; margin:5px 0; }
+.layer .nm { background:var(--soft); color:var(--accent); border-radius:6px; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px; cursor:pointer; }
+.layer .slot { min-height:38px; border:1px solid var(--line); border-radius:6px; padding:2px; cursor:pointer; }
+.layer .slot.hover { background:#f1f8e9; }
+</style>
+</head>
+<body>
+<h1>协议对号入座：把卡片放进五层模型</h1>
+<div class="sub">电脑上可以直接拖放；手机上先点一张卡片（变成蓝底），再点要放的层。放错了可以把卡片拖回或点回“卡片池”。</div>
+<div class="box"><h2>卡片池</h2><div class="pool slot" id="pool" data-l="0"></div></div>
+<div class="box"><h2>五层模型</h2><div id="layers"></div></div>
+<div class="row"><button class="main" id="check">检查</button><button id="new">换一批</button><span class="big" id="score"></span></div>
+<div class="msg" id="msg"></div>
+<script>
+(function () {
+  var BANK = [
+    ["HTTP", 5], ["DNS", 5], ["SMTP", 5], ["FTP", 5], ["DHCP", 5], ["报文", 5], ["SSH", 5], ["POP3", 5],
+    ["TCP", 4], ["UDP", 4], ["报文段", 4], ["端口号", 4], ["用户数据报", 4],
+    ["IP", 3], ["ICMP", 3], ["路由器", 3], ["分组", 3], ["IP 地址", 3], ["OSPF", 3], ["三层交换机", 3],
+    ["以太网", 2], ["交换机", 2], ["帧", 2], ["MAC 地址", 2], ["网卡", 2], ["PPP", 2], ["网桥", 2], ["ARP", 3],
+    ["比特", 1], ["集线器", 1], ["中继器", 1], ["双绞线", 1], ["光纤", 1], ["曼彻斯特编码", 1]
+  ];
+  var NAME = { 5: "应用层", 4: "运输层", 3: "网络层", 2: "数据链路层", 1: "物理层" };
+  var $ = function (id) { return document.getElementById(id); }, sel = null, drag = null;
+  function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function deal() {
+    var byL = { 1: [], 2: [], 3: [], 4: [], 5: [] };
+    shuffle(BANK.slice()).forEach(function (c) { byL[c[1]].push(c); });
+    var pick = [];
+    [1, 2, 3, 4, 5].forEach(function (l) { pick = pick.concat(byL[l].slice(0, 4)); });
+    $("pool").innerHTML = ""; $("score").textContent = ""; $("msg").textContent = "";
+    shuffle(pick).forEach(function (c) {
+      var d = document.createElement("span"); d.className = "card"; d.textContent = c[0]; d.dataset.l = c[1]; d.draggable = true;
+      d.onclick = function (e) { e.stopPropagation(); if (sel) sel.classList.remove("sel"); sel = d === sel ? null : d; if (sel) sel.classList.add("sel"); };
+      d.ondragstart = function () { drag = d; };
+      $("pool").appendChild(d);
+    });
+    var h = "";
+    [5, 4, 3, 2, 1].forEach(function (l) { h += '<div class="layer"><div class="nm" data-l="' + l + '">' + NAME[l] + '</div><div class="slot" data-l="' + l + '"></div></div>'; });
+    $("layers").innerHTML = h; bind();
+  }
+  function put(slot, card) { card.classList.remove("sel", "ok", "bad"); slot.appendChild(card); sel = null; }
+  function bind() {
+    Array.prototype.forEach.call(document.querySelectorAll(".slot, .nm"), function (s) {
+      var target = s.classList.contains("nm") ? s.nextElementSibling : s;
+      s.onclick = function () { if (sel) put(target, sel); };
+      s.ondragover = function (e) { e.preventDefault(); target.classList.add("hover"); };
+      s.ondragleave = function () { target.classList.remove("hover"); };
+      s.ondrop = function (e) { e.preventDefault(); target.classList.remove("hover"); if (drag) put(target, drag); drag = null; };
+    });
+  }
+  $("check").onclick = function () {
+    var ok = 0, left = $("pool").children.length;
+    Array.prototype.forEach.call(document.querySelectorAll("#layers .slot .card"), function (c) {
+      var right = c.dataset.l === c.parentNode.dataset.l; c.classList.toggle("ok", right); c.classList.toggle("bad", !right); if (right) ok++;
+    });
+    $("score").textContent = ok + " / 20";
+    $("msg").innerHTML = left ? "还有 " + left + " 张卡片没放。" : ok === 20 ? '<span class="ok">全对！</span>' : '红色的卡片放错了，改一改再检查。提示：PDU 名称也有层；ARP 本书归在网络层（第 8 章）。';
+  };
+  $("new").onclick = deal;
+  deal();
+})();
+</script>
+<script src="../common/sim.js"></script>
+</body>
+</html>

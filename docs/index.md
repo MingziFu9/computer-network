@@ -53,7 +53,7 @@
 | 章节 | 实验 |
 |---|---|
 | [第 1 章 认识计算机网络](chapters/01-intro/index.md) | 实验 1-1 ★ 摸清我的网络：ipconfig 与网络草图<br>实验 1-2 ★ 用 ping 测往返时间和丢包率<br>实验 1-3 ☆ 测网速，换算 Mbps 与 MB/s |
-| [第 2 章 网络体系结构：分层与协议](chapters/02-architecture/index.md) | 实验 2-1 ★ 实验名称<br>实验 2-2 ★ 实验名称<br>实验 2-3 ★ 实验名称 |
+| [第 2 章 网络体系结构：分层与协议](chapters/02-architecture/index.md) | 实验 2-1 ★ 安装 Wireshark，打开抓包文件看五层<br>实验 2-2 ★ 抓自己的包，用过滤器找 DNS 和 HTTPS<br>实验 2-3 ☆ 协议和设备对号入座 |
 | [第 3 章 物理层：从比特到信号](chapters/03-physical/index.md) | 实验 3-1 ★ 实验名称<br>实验 3-2 ★ 实验名称<br>实验 3-3 ★ 实验名称 |
 | [第 4 章 数据链路层与以太网交换](chapters/04-datalink/index.md) | 实验 4-1 ★ 实验名称<br>实验 4-2 ★ 实验名称<br>实验 4-3 ★ 实验名称 |
 | [第 5 章 VLAN 与无线局域网](chapters/05-vlan-wlan/index.md) | 实验 5-1 ★ 实验名称<br>实验 5-2 ★ 实验名称<br>实验 5-3 ★ 实验名称 |

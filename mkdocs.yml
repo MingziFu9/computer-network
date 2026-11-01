@@ -53,6 +53,8 @@ nav:
     - sims/index.md
     - "电路交换与分组交换": sims/circuit-vs-packet/index.md
     - "时延计算器": sims/delay-calculator/index.md
+    - "层层装信封": sims/encapsulation/index.md
+    - "协议对号入座": sims/layer-sort/index.md
   - 学习图谱: learning-graph/index.md
   - 常见问题: faq/index.md
   - "在线模拟卷": mock-exam.md

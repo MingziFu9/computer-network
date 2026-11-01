@@ -48,6 +48,30 @@ description: 本书主要术语的中英文名称、简明定义和例子，按�
 
 | 术语 | 英文 | 定义 | 例子 |
 |---|---|---|---|
+| <span id="g-网络协议"></span>网络协议 | Network Protocol | 为网络中的数据交换而建立的规则、标准或约定，简称协议 | 浏览器和网站服务器都遵守 HTTP 协议 |
+| <span id="g-语法"></span>语法 | Syntax | 协议三要素之一，规定数据的格式和结构 | 以太网帧前 6 字节是目的地址 |
+| <span id="g-语义"></span>语义 | Semantics | 协议三要素之一，规定各部分数据的含义和要完成的动作 | TCP 首部 SYN 为 1 表示请求建立连接 |
+| <span id="g-同步"></span>同步 | Timing | 协议三要素之一，规定事件发生的先后顺序 | 先建立连接，再传数据，最后断开 |
+| <span id="g-体系结构"></span>体系结构 | Network Architecture | 计算机网络各层及其协议的集合 | TCP/IP 体系结构 |
+| <span id="g-OSI-参考模型"></span>OSI 参考模型 | OSI Reference Model | 国际标准化组织提出的七层网络体系结构：物理、数据链路、网络、传输、会话、表示、应用 | “二层交换机”中的“二层”沿用 OSI 层号 |
+| <span id="g-TCP-IP-体系结构"></span>TCP/IP 体系结构 | TCP/IP Architecture | 互联网实际使用的四层体系结构：应用层、运输层、网际层、网络接口层 | IP 在中间，上下可接各种应用和网络，形似沙漏 |
+| <span id="g-五层模型"></span>五层模型 | Five-Layer Model | 教学中综合 OSI 和 TCP/IP 的模型：应用层、运输层、网络层、数据链路层、物理层 | 本书第 3～10 章按五层由下往上讲 |
+| <span id="g-应用层"></span>应用层 | Application Layer | 为用户的应用程序提供网络服务的层 | HTTP、DNS、SMTP |
+| <span id="g-运输层"></span>运输层 | Transport Layer | 为两台主机中的进程提供端到端通信的层，也叫传输层 | TCP、UDP |
+| <span id="g-网络层"></span>网络层 | Network Layer | 负责分组的寻址和路由选择、把分组从源主机送到目的主机的层 | IP 协议、路由器 |
+| <span id="g-数据链路层"></span>数据链路层 | Data Link Layer | 在相邻节点之间以帧为单位传送数据的层 | 以太网、交换机 |
+| <span id="g-物理层"></span>物理层 | Physical Layer | 在传输介质上透明地传送比特流的层 | 网线、光纤、集线器 |
+| <span id="g-封装"></span>封装 | Encapsulation | 发送方每一层在上层数据前加上本层首部（链路层还加尾部）的过程 | HTTP 请求被依次加上 TCP、IP、以太网首部 |
+| <span id="g-解封装"></span>解封装 | Decapsulation | 接收方每一层读取并去掉本层首部、把数据交给上层的过程 | 服务器去掉以太网、IP、TCP 首部后得到 HTTP 请求 |
+| <span id="g-首部"></span>首部 | Header | 加在数据前面、存放本层控制信息的部分 | IP 首部里有源和目的 IP 地址 |
+| <span id="g-协议数据单元"></span>协议数据单元 | Protocol Data Unit, PDU | 对等层之间交换的数据单元，各层名称不同 | 应用层报文、运输层报文段、网络层分组、链路层帧 |
+| <span id="g-帧"></span>帧 | Frame | 数据链路层的协议数据单元 | 以太网帧 |
+| <span id="g-对等层通信"></span>对等层通信 | Peer-to-Peer Layer Communication | 通信双方同一层之间按协议交换信息，只读对方同层的首部 | 服务器的 TCP 只读电脑的 TCP 写的首部 |
+| <span id="g-服务"></span>服务 | Service | 下层为相邻上层提供的功能，是垂直关系 | 运输层为应用层提供可靠传输服务 |
+| <span id="g-服务访问点"></span>服务访问点 | Service Access Point, SAP | 相邻两层之间交换信息的接口 | 端口号是运输层与应用层之间的服务访问点 |
+| <span id="g-Wireshark"></span>Wireshark | Wireshark | 免费开源的网络抓包和协议分析软件 | 打开 web_visit.pcap 逐层查看分组 |
+| <span id="g-抓包"></span>抓包 | Packet Capture | 把流经网卡的帧记录下来以供分析 | 用 Wireshark 记录访问网站时的数据 |
+| <span id="g-显示过滤器"></span>显示过滤器 | Display Filter | Wireshark 中只显示符合条件的帧的过滤表达式 | `ip.addr == 203.0.113.10` |
 
 ## 第 3 章 物理层：从比特到信号
 

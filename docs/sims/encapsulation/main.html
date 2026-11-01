@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>层层装信封</title>
+<link rel="stylesheet" href="../common/sim.css">
+<style>
+.stage { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-top:8px; }
+.dev { border:1px solid var(--line); border-radius:8px; padding:6px; font-size:12px; }
+.dev h3 { margin:0 0 4px; font-size:12.5px; text-align:center; }
+.ly { border-radius:4px; padding:3px 4px; margin:2px 0; text-align:center; background:#f5f7fa; color:#90a4ae; transition:all .2s; }
+.ly.act { background:var(--soft); color:var(--accent); font-weight:600; outline:2px solid var(--accent); }
+.ly.na { visibility:hidden; }
+.pdu { display:flex; height:34px; margin:10px 0 4px; border-radius:4px; overflow:hidden; font-size:11.5px; }
+.pdu div { display:flex; align-items:center; justify-content:center; color:#fff; white-space:nowrap; overflow:hidden; transition:all .3s; }
+.h-eth { background:#8e24aa; } .h-ip { background:#3f51b5; } .h-tcp { background:#43a047; } .h-app { background:#ef6c00; } .h-fcs { background:#6a1b9a; }
+.bits { font-family:Consolas,monospace; font-size:12px; color:var(--muted); word-break:break-all; min-height:1.4em; }
+@media (max-width:620px) { .stage { grid-template-columns:repeat(2,1fr); } }
+</style>
+</head>
+<body>
+<h1>层层装信封：一个网页请求从阿美的电脑到服务器</h1>
+<div class="sub">点“下一步”逐步观看。数据长度取自抓包文件 web_visit.pcap 第 10 帧：HTTP 154 字节、TCP 首部 32、IP 首部 20、以太网首部 14（另有 4 字节尾部，抓包看不到）。</div>
+<div class="row"><button class="main" id="next">下一步</button><button id="auto">自动播放</button><button id="reset">重来</button><span class="lbl" id="cnt"></span></div>
+<div class="stage" id="stage"></div>
+<div class="box"><h2 id="ptitle">当前的数据</h2><div class="pdu" id="pdu"></div><div class="bits" id="bits"></div><div class="msg" id="msg"></div></div>
+<script>
+(function () {
+  var DEV = [
+    { n: "阿美的电脑", L: [5, 4, 3, 2, 1] }, { n: "交换机", L: [2, 1] },
+    { n: "路由器", L: [3, 2, 1] }, { n: "网站服务器", L: [5, 4, 3, 2, 1] }
+  ];
+  var NAME = { 5: "应用层", 4: "运输层", 3: "网络层", 2: "数据链路层", 1: "物理层" };
+  // 每一步：设备序号、层、PDU 组成、说明
+  var S = [
+    [0, 5, ["app"], "浏览器按 HTTP 协议写出请求“GET / HTTP/1.1，Host: www.xiaohe.com”，共 154 字节。这是应用层的报文。"],
+    [0, 4, ["tcp", "app"], "运输层加上 32 字节的 TCP 首部：源端口 35070、目的端口 80（网站程序）、序号等。现在叫报文段，共 186 字节。"],
+    [0, 3, ["ip", "tcp", "app"], "网络层加上 20 字节的 IP 首部：源地址 192.168.1.10、目的地址 203.0.113.10、TTL=64。现在叫分组（IP 数据报），共 206 字节。"],
+    [0, 2, ["eth", "ip", "tcp", "app", "fcs"], "数据链路层加上 14 字节的以太网首部（目的 MAC 是路由器网卡 00:e0:fc:12:34:01）和 4 字节尾部（校验码）。现在叫帧。"],
+    [0, 1, ["bits"], "物理层把帧变成一串比特，用网线上的电信号或 WiFi 的无线电波发出去。"],
+    [1, 1, ["bits"], "交换机从网线上收到信号，还原成比特。"],
+    [1, 2, ["eth", "ip", "tcp", "app", "fcs"], "交换机只拆到数据链路层：看目的 MAC 地址，查自己的地址表，从连着路由器的接口转发出去。里面的 IP、TCP、HTTP 它都不看。"],
+    [2, 2, ["eth", "ip", "tcp", "app", "fcs"], "路由器收到帧，检查校验码无误，去掉以太网首部和尾部。"],
+    [2, 3, ["ip", "tcp", "app"], "路由器拆到网络层：看目的 IP 地址 203.0.113.10，查路由表决定下一站，把 TTL 减 1。"],
+    [2, 2, ["eth2", "ip", "tcp", "app", "fcs"], "路由器换上一个新的链路层首部（源、目的 MAC 都变成下一段链路上的地址），再发出去。注意：IP 地址没变，MAC 地址变了。"],
+    [3, 1, ["bits"], "（中间还会经过运营商的很多台路由器，过程相同。）服务器收到比特。"],
+    [3, 2, ["eth2", "ip", "tcp", "app", "fcs"], "服务器的数据链路层检查目的 MAC 是自己，去掉以太网首部和尾部，交给网络层。"],
+    [3, 3, ["ip", "tcp", "app"], "网络层看目的 IP 是自己，看“协议”字段是 TCP，去掉 IP 首部交给运输层。"],
+    [3, 4, ["tcp", "app"], "运输层看目的端口 80，知道该交给网站程序，去掉 TCP 首部。"],
+    [3, 5, ["app"], "网站程序拿到 154 字节的 HTTP 请求，读懂“请把首页给我”，准备回复。整个过程中，每一层只读对方同一层写的首部——这就是对等层通信。"]
+  ];
+  var PART = {
+    app: ["HTTP 请求 154", "h-app", 154], tcp: ["TCP 32", "h-tcp", 32], ip: ["IP 20", "h-ip", 20],
+    eth: ["以太网 14", "h-eth", 14], eth2: ["新以太网首部 14", "h-eth", 14], fcs: ["尾 4", "h-fcs", 4]
+  };
+  var $ = function (id) { return document.getElementById(id); }, k = -1, timer = null;
+  function drawStage(cur) {
+    var h = "";
+    DEV.forEach(function (d, i) {
+      h += '<div class="dev"><h3>' + d.n + "</h3>";
+      [5, 4, 3, 2, 1].forEach(function (l) {
+        var on = d.L.indexOf(l) >= 0, act = cur && cur[0] === i && cur[1] === l;
+        h += '<div class="ly' + (on ? "" : " na") + (act ? " act" : "") + '">' + NAME[l] + "</div>";
+      });
+      h += "</div>";
+    });
+    $("stage").innerHTML = h;
+  }
+  function render() {
+    var cur = S[k]; drawStage(cur);
+    $("cnt").textContent = k < 0 ? "" : "第 " + (k + 1) + " / " + S.length + " 步";
+    if (!cur) { $("ptitle").textContent = "当前的数据"; $("pdu").innerHTML = ""; $("bits").textContent = ""; $("msg").textContent = "点“下一步”开始。"; return; }
+    var parts = cur[2];
+    if (parts[0] === "bits") {
+      $("pdu").innerHTML = ""; var b = ""; for (var i = 0; i < 160; i++) b += (Math.sin(i * 7.3 + k) > 0 ? "1" : "0");
+      $("bits").textContent = b + "……（共 224 字节 × 8 = 1792 比特）"; $("ptitle").textContent = "当前的数据：比特";
+    } else {
+      var tot = 0; parts.forEach(function (p) { tot += PART[p][2]; });
+      $("pdu").innerHTML = parts.map(function (p) { var q = PART[p]; return '<div class="' + q[1] + '" style="flex:' + Math.max(q[2], 14) + '">' + q[0] + "</div>"; }).join("");
+      $("bits").textContent = "";
+      var nm = { 5: "报文", 4: "报文段", 3: "分组", 2: "帧" }[cur[1]];
+      $("ptitle").textContent = "当前的数据：" + nm + "，共 " + tot + " 字节";
+    }
+    $("msg").textContent = cur[3];
+  }
+  $("next").onclick = function () { if (k < S.length - 1) { k++; render(); } };
+  $("reset").onclick = function () { if (timer) { clearInterval(timer); timer = null; $("auto").textContent = "自动播放"; } k = -1; render(); };
+  $("auto").onclick = function () {
+    if (timer) { clearInterval(timer); timer = null; this.textContent = "自动播放"; return; }
+    if (k >= S.length - 1) k = -1;
+    this.textContent = "暂停";
+    timer = setInterval(function () { if (k < S.length - 1) { k++; render(); } else { clearInterval(timer); timer = null; $("auto").textContent = "自动播放"; } }, 2200);
+  };
+  render();
+})();
+</script>
+<script src="../common/sim.js"></script>
+</body>
+</html>
