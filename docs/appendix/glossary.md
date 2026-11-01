@@ -146,6 +146,26 @@ description: 本书主要术语的中英文名称、简明定义和例子，按�
 
 | 术语 | 英文 | 定义 | 例子 |
 |---|---|---|---|
+| <span id="g-VLAN"></span>VLAN | Virtual LAN | 虚拟局域网：在交换机上把一个物理局域网按逻辑划分成多个广播域的技术 | 设计部 VLAN 10、财务部 VLAN 20 |
+| <span id="g-Access-口"></span>Access 口 | Access Port | 只属于一个 VLAN 的交换机接口，一般连接电脑，收发普通以太网帧 | switchport mode access |
+| <span id="g-Trunk-口"></span>Trunk 口 | Trunk Port | 可以同时传送多个 VLAN 帧的交换机接口，一般用于交换机之间，帧带 802.1Q 标签 | switchport mode trunk |
+| <span id="g-802.1Q"></span>802.1Q | IEEE 802.1Q | 规定 VLAN 标签格式的 IEEE 标准：在源地址和类型之间插入 4 字节标签 | Wireshark 中的 802.1Q Virtual LAN |
+| <span id="g-VLAN-标识符"></span>VLAN 标识符 | VLAN Identifier | 802.1Q 标签中 12 位的 VLAN 号，简称 VID，可用 1～4094 | ID: 10 |
+| <span id="g-单臂路由"></span>单臂路由 | Router on a Stick | 路由器用一个物理接口连到交换机 Trunk 口，划分子接口实现 VLAN 间通信 | 小网络中让财务部和设计部互通 |
+| <span id="g-三层交换机"></span>三层交换机 | Layer 3 Switch | 能在内部完成 VLAN 之间转发的交换机，兼具交换和路由功能 | 企业网的核心交换机 |
+| <span id="g-链路聚合"></span>链路聚合 | Link Aggregation | 把多根物理链路捆绑成一条逻辑链路，叠加带宽并互为备份 | 两根千兆线当两千兆用 |
+| <span id="g-无线局域网"></span>无线局域网 | Wireless LAN | 通过无线电波接入的局域网，简称 WLAN | 办公室的 WiFi |
+| <span id="g-802.11"></span>802.11 | IEEE 802.11 | 无线局域网的 IEEE 标准系列 | 802.11ax 即 WiFi 6 |
+| <span id="g-WiFi"></span>WiFi | Wi-Fi | 基于 802.11 标准的无线局域网的通称，新一代用数字代号命名 | WiFi 6、WiFi 7 |
+| <span id="g-CSMA-CA"></span>CSMA/CA | Carrier Sense Multiple Access with Collision Avoidance | 载波监听多点接入 / 碰撞避免：先听、随机退避、发送后等确认 | WiFi 的介质访问方式 |
+| <span id="g-确认"></span>确认 | Acknowledgement | 接收方正确收到数据后发回的回复，简称 ACK | 802.11 每收到一帧都要确认 |
+| <span id="g-无线路由器"></span>无线路由器 | Wireless Router | 集成了路由器、交换机和无线接入点功能的设备 | 家里的 WiFi 路由器 |
+| <span id="g-AP"></span>AP | Access Point | 无线接入点，把无线设备接入有线网络的设备 | 企业每个房间天花板上的吸顶 AP |
+| <span id="g-Mesh-组网"></span>Mesh 组网 | Mesh Networking | 多台路由器互相连接组成一个无线网络，名字密码相同、自动切换 | 大户型住宅的子母路由 |
+| <span id="g-SSID"></span>SSID | Service Set Identifier | 无线网络的名字 | 手机 WiFi 列表里的 Xiaohe-Office |
+| <span id="g-WPA2"></span>WPA2 | Wi-Fi Protected Access 2 | 使用 AES 加密的无线安全标准，目前广泛使用，需配合强密码 | WPA2-PSK（个人版） |
+| <span id="g-WPA3"></span>WPA3 | Wi-Fi Protected Access 3 | 新一代无线安全标准，用 SAE 改进密码交换，更难被暴力破解 | 新路由器的 WPA3 选项 |
+| <span id="g-访客网络"></span>访客网络 | Guest Network | 单独的 SSID 和密码，只能上网、不能访问内部网络的无线网络 | 给来访客户用的 WiFi |
 
 ## 第 6 章 IP 地址：IPv4、子网划分与 IPv6
 

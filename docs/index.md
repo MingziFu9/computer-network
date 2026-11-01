@@ -56,7 +56,7 @@
 | [第 2 章 网络体系结构：分层与协议](chapters/02-architecture/index.md) | 实验 2-1 ★ 安装 Wireshark，打开抓包文件看五层<br>实验 2-2 ★ 抓自己的包，用过滤器找 DNS 和 HTTPS<br>实验 2-3 ☆ 协议和设备对号入座 |
 | [第 3 章 物理层：从比特到信号](chapters/03-physical/index.md) | 实验 3-1 ★ 认识网线和接口，排出 T568B 线序<br>实验 3-2 ★ 看懂无线信号：信号强度、信道和速率<br>实验 3-3 ☆ 带宽与下载时间：算一算再测一测 |
 | [第 4 章 数据链路层与以太网交换](chapters/04-datalink/index.md) | 实验 4-1 ★ 在抓包里看以太网帧<br>实验 4-2 ★ Packet Tracer 第一次组网<br>实验 4-3 ☆ 用模拟模式看帧怎么走 |
-| [第 5 章 VLAN 与无线局域网](chapters/05-vlan-wlan/index.md) | 实验 5-1 ★ 实验名称<br>实验 5-2 ★ 实验名称<br>实验 5-3 ★ 实验名称 |
+| [第 5 章 VLAN 与无线局域网](chapters/05-vlan-wlan/index.md) | 实验 5-1 ★ 按部门划分 VLAN<br>实验 5-2 ★ 两台交换机之间的 Trunk，看 802.1Q 标签<br>实验 5-3 ☆ 设置无线路由器 |
 | [第 6 章 IP 地址：IPv4、子网划分与 IPv6](chapters/06-ip-address/index.md) | 实验 6-1 ★ 实验名称<br>实验 6-2 ★ 实验名称<br>实验 6-3 ★ 实验名称 |
 | [第 7 章 路由：数据包怎么找路](chapters/07-routing/index.md) | 实验 7-1 ★ 实验名称<br>实验 7-2 ★ 实验名称<br>实验 7-3 ★ 实验名称 |
 | [第 8 章 网络层的好帮手：ARP、ICMP、DHCP 与 NAT](chapters/08-arp-dhcp-nat/index.md) | 实验 8-1 ★ 实验名称<br>实验 8-2 ★ 实验名称<br>实验 8-3 ★ 实验名称 |

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WiFi 信道</title>
+<link rel="stylesheet" href="../common/sim.css">
+<style>
+#sp { width:100%; display:block; }
+.ctl { display:grid; grid-template-columns:5.5em 1.2em 1fr 5em; gap:6px; align-items:center; font-size:13px; margin:3px 0; }
+.ctl i { display:inline-block; width:14px; height:14px; border-radius:3px; }
+.ax { font-size:11px; fill:#555; text-anchor:middle; }
+</style>
+</head>
+<body>
+<h1>WiFi 信道：2.4 GHz 上的“撞车”</h1>
+<div class="sub">我国 2.4 GHz 有 13 个信道，相邻信道中心频率只差 5 MHz，而一个信号约占 22 MHz 宽。拖动滑块给每台路由器选信道，勾选框控制它是否开机。频谱重叠就会互相干扰。</div>
+<div class="row ex"><span class="lbl">试试：</span><button data-p="6,6,6,6">全用默认信道 6</button><button data-p="1,3,5,7">挤在一起</button><button data-p="1,6,11,6">1、6、11 加一台</button><button data-p="1,6,11,0">三台：1、6、11</button></div>
+<div id="ctl"></div>
+<svg id="sp" viewBox="0 0 760 250"></svg>
+<div class="box"><h2>干扰：<span class="big" id="n"></span> 处</h2><div class="msg" id="msg"></div></div>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var NS = "http://www.w3.org/2000/svg";
+  var AP = [{ n: "小禾工作室", c: "#3f51b5", ch: 6, on: true }, { n: "隔壁公司", c: "#e53935", ch: 6, on: true }, { n: "楼下奶茶店", c: "#43a047", ch: 6, on: true }, { n: "楼上律所", c: "#ef6c00", ch: 6, on: true }];
+  var X0 = 40, W = 680, F0 = 2397, F1 = 2487;   // 横轴频率范围 MHz
+  function fx(f) { return X0 + (f - F0) / (F1 - F0) * W; }
+  function freq(ch) { return 2412 + 5 * (ch - 1); }
+  function el(tag, a, txt) { var e = document.createElementNS(NS, tag); for (var k in a) e.setAttribute(k, a[k]); if (txt != null) e.textContent = txt; return e; }
+  $("ctl").innerHTML = AP.map(function (a, i) {
+    return '<div class="ctl"><span>' + a.n + '</span><input type="checkbox" data-o="' + i + '" checked><input type="range" min="1" max="13" data-c="' + i + '"><span id="v' + i + '"></span></div>';
+  }).join("");
+  Array.prototype.forEach.call(document.querySelectorAll("[data-c]"), function (r) { r.oninput = function () { AP[+r.dataset.c].ch = +r.value; draw(); }; });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-o]"), function (c) { c.onchange = function () { AP[+c.dataset.o].on = c.checked; draw(); }; });
+  function draw() {
+    var svg = $("sp"); svg.innerHTML = "";
+    svg.appendChild(el("line", { x1: X0, y1: 200, x2: X0 + W, y2: 200, stroke: "#999" }));
+    for (var ch = 1; ch <= 13; ch++) {
+      var x = fx(freq(ch)), good = ch === 1 || ch === 6 || ch === 11;
+      svg.appendChild(el("line", { x1: x, y1: 200, x2: x, y2: 206, stroke: "#999" }));
+      svg.appendChild(el("text", { x: x, y: 220, "class": "ax", "font-weight": good ? "bold" : "normal" }, ch));
+    }
+    svg.appendChild(el("text", { x: X0 + W / 2, y: 242, "class": "ax" }, "信道号（粗体 1、6、11 互不重叠）· 2.412～2.472 GHz"));
+    var shown = 0;
+    AP.forEach(function (a, i) {
+      $("v" + i).textContent = a.on ? "信道 " + a.ch : "关机";
+      document.querySelector('[data-c="' + i + '"]').value = a.ch;
+      document.querySelector('[data-o="' + i + '"]').checked = a.on;
+      if (!a.on) return;
+      var f = freq(a.ch), l = fx(f - 11), r = fx(f + 11), top = 60 + shown * 8;
+      svg.appendChild(el("path", { d: "M" + l + " 200 C" + (l + (r - l) * .15) + " " + top + " " + (r - (r - l) * .15) + " " + top + " " + r + " 200 Z", fill: a.c, "fill-opacity": .25, stroke: a.c, "stroke-width": 2 }));
+      svg.appendChild(el("text", { x: fx(f), y: top + 26 - 0, "class": "ax", fill: a.c }, a.n));
+      shown++;
+    });
+    var pairs = [];
+    for (var i = 0; i < AP.length; i++) for (var j = i + 1; j < AP.length; j++)
+      if (AP[i].on && AP[j].on && Math.abs(AP[i].ch - AP[j].ch) < 5) pairs.push(AP[i].n + " 与 " + AP[j].n + (AP[i].ch === AP[j].ch ? "（同信道，轮流说话）" : "（部分重叠，互相当噪声）"));
+    $("n").textContent = pairs.length;
+    $("msg").innerHTML = pairs.length ? pairs.join("；") + "。" : "没有重叠，各走各的车道。";
+    var onCount = AP.filter(function (a) { return a.on; }).length;
+    if (onCount > 3 && pairs.length) $("msg").innerHTML += "<br>4 台路由器挤在 2.4 GHz 上，不可能完全不重叠（只有 3 条互不重叠的车道）。这时让同信道的设备共享，或者把一部分设备换到 5 GHz。";
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("[data-p]"), function (b) {
+    b.onclick = function () { b.dataset.p.split(",").map(Number).forEach(function (c, i) { AP[i].on = c > 0; if (c > 0) AP[i].ch = c; }); draw(); };
+  });
+  draw();
+})();
+</script>
+<script src="../common/sim.js"></script>
+</body>
+</html>
