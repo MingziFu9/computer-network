@@ -1,0 +1,128 @@
+# 第 5 章教案底稿，由 python tools/make_lesson_plan.py draft 生成。
+# 改好“【待填】”的地方，删减或补充其他内容后运行 build。字段说明见 lesson-plans/README.md
+chapter: 5
+online: 5
+offline: 1
+methods:
+- 讲授法
+- 案例教学法
+- 演示法
+- 线上自主学习
+- 实验教学法
+objectives:
+  knowledge:
+  - 说出 VLAN 的作用，以及 Access 口和 Trunk 口的区别
+  - 解释 802.1Q 标签加在帧的什么位置、有什么用，在抓包中找出 VLAN 号
+  - 说出 WiFi 4/5/6/7 对应的标准，比较 2.4 GHz 和 5 GHz 的特点，解释为什么要错开信道
+  skill:
+  - 在 Packet Tracer 中创建 VLAN、把接口划入 VLAN、配置 Trunk，并验证隔离效果
+  - 按照安全要求设置无线路由器的 SSID、加密方式和访客网络
+  quality:
+  - 【待填】职业素养、科学态度或科技伦理方面的目标，1–2 条
+key_points:
+- 为什么要划分 VLAN
+- Access 口、Trunk 口与 802.1Q
+- 不同 VLAN 之间怎样通信
+- 冗余、环路与生成树
+difficulties:
+- point: 【待填】学生最容易卡住的 1–2 个难点
+  solution: 【待填】突破难点的办法，如动画演示、手算例子
+process:
+- phase: 课前（线上）
+  steps:
+  - name: 自主预习
+    minutes: 90
+    content: 阅读网页教材第 5 章 VLAN 与无线局域网的情景导入和第一节，操作交互动画“VLAN 隔离广播”
+    teacher: 在学习平台发布预习任务和预习问题
+    student: 阅读教材、观看课件，在讨论区提出疑问
+    intent: 带着问题进课堂
+- phase: 课中（线下面授 / 直播）
+  steps:
+  - name: 情景导入
+    minutes: 10
+    content: 情景导入：半年过去，小禾工作室从 5 个人发展到了 20 多人，分成了设计部和财务部，前台还专门给来访的客户留了几个座位。人一多，……
+    teacher: 讲述情景，提出本章要解决的问题
+    student: 思考并回答问题，说出自己的经验
+    intent: 联系工作和生活场景，激发学习兴趣
+  - name: 讲授与演示
+    minutes: 5
+    content: 5.1 为什么要划分 VLAN：广播太多的烦恼、VLAN
+    teacher: 讲解要点，结合例子和“算一算”演示；用交互动画“VLAN 隔离广播”课堂演示
+    student: 听讲、跟着计算、操作动画并回答提问
+    intent: 【待填】
+  - name: 讲授
+    minutes: 5
+    content: 5.2 Access 口、Trunk 口与 802.1Q：Access 口、Trunk 口、802.1Q 标签、VLAN 怎样配置（Cisco 命令一览）
+    teacher: 讲解要点，结合例子和“算一算”演示
+    student: 听讲、跟着计算、记录要点
+    intent: 【待填】
+  - name: 讲授
+    minutes: 5
+    content: 5.3 不同 VLAN 之间怎样通信
+    teacher: 讲解要点，结合例子和“算一算”演示
+    student: 听讲、跟着计算、记录要点
+    intent: 【待填】
+  - name: 讲授
+    minutes: 5
+    content: 5.4 冗余、环路与生成树：多连一根线，网络反而瘫痪了、生成树协议、链路聚合（了解）
+    teacher: 讲解要点，结合例子和“算一算”演示
+    student: 听讲、跟着计算、记录要点
+    intent: 【待填】
+  - name: 讲授与演示
+    minutes: 5
+    content: 5.5 无线局域网：802.11 与 WiFi 的代际、2.4 GHz 与 5 GHz、信道、CSMA/CA
+    teacher: 讲解要点，结合例子和“算一算”演示；用交互动画“WiFi 信道”课堂演示
+    student: 听讲、跟着计算、操作动画并回答提问
+    intent: 【待填】
+  - name: 讲授
+    minutes: 5
+    content: 5.6 无线组网与安全：无线路由器、AP 与 AC、加密方式、安全又快的无线网络
+    teacher: 讲解要点，结合例子和“算一算”演示
+    student: 听讲、跟着计算、记录要点
+    intent: 【待填】
+  - name: 讲授
+    minutes: 5
+    content: 5.7 本章常见问题对照
+    teacher: 讲解要点，结合例子和“算一算”演示
+    student: 听讲、跟着计算、记录要点
+    intent: 【待填】
+  - name: 拓展
+    minutes: 5
+    content: 5.8 AI 与网络：给智能设备单独一个网络
+    teacher: 讲解要点，结合例子和“算一算”演示
+    student: 听讲、跟着计算、记录要点
+    intent: 【待填】
+  - name: 实验
+    minutes: 5
+    content: 实验 5-1 按部门划分 VLAN
+    teacher: 演示关键步骤，巡视指导，收集常见错误
+    student: 按步骤完成实验，填写记录表
+    intent: 在交换机上创建 VLAN 并给 VLAN 命名；把接口划入指定的 VLAN；验证同一 VLAN 能通、不同 VLAN 不
+  - name: 课堂练习
+    minutes: 10
+    content: 课后练习中的单选、判断题（在线作答，共 16 题，选做）
+    teacher: 组织学生在网页上作答，讲评错误率高的题
+    student: 在线作答，查看解析
+    intent: 即时检验学习效果
+  - name: 小结
+    minutes: 5
+    content: 用本章知识导图回顾要点，预告下一章
+    teacher: 带领学生梳理知识导图
+    student: 复述本章要点
+    intent: 形成知识结构
+- phase: 课后（线上）
+  steps:
+  - name: 课后巩固
+    minutes: 135
+    content: 完成本章课后练习（在线作答 16 题，简答 / 实操 4 题），提交实验报告
+    teacher: 批改作业和实验报告，在讨论区答疑
+    student: 完成练习，错题点“回看”复习对应小节
+    intent: 巩固知识，形成技能
+homework:
+- 简答题：小禾工作室有设计部、财务部和访客区，只有一台 24 口交换机。请说明怎样用 VLAN 满足“财务单独隔开、访客不能访问内部”的要求，并说出划分 VLAN 的三个好处。
+- 简答题：比较 CSMA/CD 和 CSMA/CA：分别用在什么网络中？对碰撞的处理思路有什么不同？无线局域网为什么不能使用 CSMA/CD？
+- 简答题：下面是 Wireshark 中某帧的前 18 个字节：`ff ff ff ff ff ff 00 e0 4c 20 00 11 81 00 00 14 08 06`。请写出目的 MAC 地址、源 MAC 地址、这个帧属于哪个 VLAN，以及里面装的是什么协议。
+- 实操题：补全下面的思科交换机配置命令：创建 VLAN 20 并命名为 Finance，把 Fa0/3 划入 VLAN 20，再把连接另一台交换机的 Gi0/1 设为 Trunk 口。
+- 实验报告：实验 5-1、实验 5-2、实验 5-3
+assessment: 课堂练习正确率、课后作业和实验报告计入平时成绩
+reflection: ''
