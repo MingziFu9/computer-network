@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>编码与调制</title>
+<link rel="stylesheet" href="../common/sim.css">
+<style>
+#wave { width:100%; display:block; cursor:pointer; }
+#bits { font-family:monospace; font-size:15px; width:12em; }
+.lab { font-size:12px; fill:#555; }
+.sig { fill:none; stroke-width:2; }
+.grid { stroke:#e0e0e0; stroke-width:1; }
+.bitt { font-size:13px; font-family:monospace; text-anchor:middle; }
+.hl { fill:#fff3c4; }
+</style>
+</head>
+<body>
+<h1>编码与调制：同一串 0 和 1，六种样子</h1>
+<div class="sub">编码把数字信号变成另一种数字信号（上面三行），调制把数字信号装到载波上（下面三行）。曼彻斯特编码按本书约定：码元中间向上跳为 1、向下跳为 0。差分曼彻斯特：码元开始处有跳变为 0、无跳变为 1。</div>
+<div class="row"><span>比特串：</span><input id="bits" value="010011" maxlength="12"><button id="go">画出来</button>
+  <span class="ex"><span class="lbl">试试：</span><button data-b="010011">教材例子</button><button data-b="10110">课后第 17 题</button><button data-b="00000000">一长串 0</button><button data-b="11111111">一长串 1</button></span></div>
+<svg id="wave" viewBox="0 0 760 470"></svg>
+<div class="box"><h2 id="t">点波形上任意一位，看它在每种波形里的样子</h2><div class="msg" id="msg"></div></div>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var NS = "http://www.w3.org/2000/svg";
+  var X0 = 110, W = 630, rows = ["不归零", "曼彻斯特", "差分曼彻斯特", "调幅 ASK", "调频 FSK", "调相 PSK"];
+  var colors = ["#3f51b5", "#43a047", "#8e24aa", "#ef6c00", "#00838f", "#c62828"];
+  var bits = [], sel = -1;
+  function el(tag, attrs, txt) { var e = document.createElementNS(NS, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); if (txt != null) e.textContent = txt; return e; }
+  function draw() {
+    var svg = $("wave"); svg.innerHTML = "";
+    var n = bits.length, cw = W / n;
+    if (sel >= 0) svg.appendChild(el("rect", { x: X0 + sel * cw, y: 0, width: cw, height: 470, "class": "hl" }));
+    for (var i = 0; i <= n; i++) svg.appendChild(el("line", { x1: X0 + i * cw, y1: 18, x2: X0 + i * cw, y2: 465, "class": "grid" }));
+    bits.forEach(function (b, i) { svg.appendChild(el("text", { x: X0 + (i + .5) * cw, y: 14, "class": "bitt" }, b)); });
+    rows.forEach(function (name, r) {
+      var yc = 50 + r * 75, hi = yc - 20, lo = yc + 20, d = "";
+      svg.appendChild(el("text", { x: 4, y: yc + 4, "class": "lab" }, name));
+      if (r === 0) {
+        bits.forEach(function (b, i) { var y = b ? hi : lo; d += (i ? "L" : "M") + (X0 + i * cw) + " " + y + "L" + (X0 + (i + 1) * cw) + " " + y; });
+      } else if (r === 1) {
+        bits.forEach(function (b, i) {
+          var a = b ? lo : hi, c = b ? hi : lo, x = X0 + i * cw;
+          d += (i ? "L" : "M") + x + " " + a + "L" + (x + cw / 2) + " " + a + "L" + (x + cw / 2) + " " + c + "L" + (x + cw) + " " + c;
+        });
+      } else if (r === 2) {
+        var level = hi;   // 进入第一个码元前假定线路为高电平
+        bits.forEach(function (b, i) {
+          var x = X0 + i * cw;
+          var start = b ? level : (level === hi ? lo : hi);   // 0：开始处跳变；1：不跳
+          var mid = start === hi ? lo : hi;                    // 中间总跳变
+          d += (i ? "L" : "M") + x + " " + start + "L" + (x + cw / 2) + " " + start + "L" + (x + cw / 2) + " " + mid + "L" + (x + cw) + " " + mid;
+          level = mid;
+        });
+      } else {
+        var steps = 40;
+        bits.forEach(function (b, i) {
+          for (var k = 0; k <= steps; k++) {
+            var t = k / steps, x = X0 + (i + t) * cw, y;
+            if (r === 3) y = yc - (b ? 20 : 6) * Math.sin(2 * Math.PI * 2 * t);
+            else if (r === 4) y = yc - 20 * Math.sin(2 * Math.PI * (b ? 4 : 2) * t);
+            else y = yc - 20 * Math.sin(2 * Math.PI * 2 * t + (b ? 0 : Math.PI));
+            d += ((i || k) ? "L" : "M") + x.toFixed(1) + " " + y.toFixed(1);
+          }
+        });
+      }
+      svg.appendChild(el("path", { d: d, "class": "sig", stroke: colors[r] }));
+    });
+    explain();
+  }
+  function explain() {
+    if (sel < 0) { $("t").textContent = "点波形上任意一位，看它在每种波形里的样子"; $("msg").innerHTML = "提示：对比“一长串 0”和“一长串 1”，看不归零编码为什么会让接收方“数乱”。"; return; }
+    var b = bits[sel], prevMid = null;
+    $("t").textContent = "第 " + (sel + 1) + " 位是 " + b;
+    $("msg").innerHTML =
+      "不归零：整个码元保持" + (b ? "高" : "低") + "电平，中间不跳。<br>" +
+      "曼彻斯特：中间" + (b ? "从低跳到高（向上跳 = 1）" : "从高跳到低（向下跳 = 0）") + "。<br>" +
+      "差分曼彻斯特：码元开始处" + (b ? "没有跳变（= 1）" : "有跳变（= 0）") + "，中间的跳变只用来同步。<br>" +
+      "调幅：用" + (b ? "大" : "小") + "振幅表示；调频：用" + (b ? "高" : "低") + "频率表示；调相：" + (b ? "相位 0°" : "相位反转 180°") + "。";
+  }
+  function load(s) {
+    s = s.replace(/[^01]/g, "").slice(0, 12); if (!s) s = "010011";
+    $("bits").value = s; bits = s.split("").map(Number); sel = -1; draw();
+    if (/^0+$|^1+$/.test(s) && s.length > 4) $("msg").innerHTML = "一长串相同的比特：不归零编码是一条直线，接收方分不清到底有几位；曼彻斯特和差分曼彻斯特每位中间都有跳变，照样能数清。";
+  }
+  $("go").onclick = function () { load($("bits").value); };
+  $("bits").onkeydown = function (e) { if (e.key === "Enter") load(this.value); };
+  $("wave").onclick = function (e) {
+    var r = this.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * 760;
+    var i = Math.floor((x - X0) / (W / bits.length)); if (i >= 0 && i < bits.length) { sel = i; draw(); }
+  };
+  Array.prototype.forEach.call(document.querySelectorAll("[data-b]"), function (b) { b.onclick = function () { load(b.dataset.b); }; });
+  load("010011");
+})();
+</script>
+<script src="../common/sim.js"></script>
+</body>
+</html>

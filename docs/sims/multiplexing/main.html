@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>复用</title>
+<link rel="stylesheet" href="../common/sim.css">
+<style>
+#cv { width:100%; display:block; }
+.mode button.on { background:var(--accent); color:#fff; }
+.users label { margin-right:12px; font-size:13px; }
+.users i { display:inline-block; width:12px; height:12px; border-radius:2px; vertical-align:-1px; margin-right:3px; }
+.ax { font-size:12px; fill:#555; }
+</style>
+</head>
+<body>
+<h1>复用：4 路用户怎样共用一条线路</h1>
+<div class="sub">横轴是时间，纵轴是频率（波分复用时是光的波长）。每个色块表示这一块“频率 × 时间”给了哪个用户；灰色虚框是分出去却没人用的浪费。</div>
+<div class="row mode"><span>复用方式：</span>
+  <button data-m="fdm">频分 FDM</button><button data-m="tdm">时分 TDM</button><button data-m="stdm">统计时分</button><button data-m="wdm">波分 WDM</button></div>
+<div class="row users"><span>谁有数据要发：</span><span id="us"></span></div>
+<svg id="cv" viewBox="0 0 760 300"></svg>
+<div class="box"><h2 id="t"></h2><div class="msg" id="msg"></div><div class="note" id="eff"></div></div>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var NS = "http://www.w3.org/2000/svg";
+  var C = ["#3f51b5", "#43a047", "#ef6c00", "#8e24aa"], names = ["禾姐", "阿美", "陈姐", "小林"];
+  // 每个用户在 8 个时间段里有没有数据（1 有 0 无），用户关掉时全为 0
+  var pattern = [[1,1,0,1,1,0,1,1],[1,0,1,1,0,1,0,1],[0,1,1,0,1,1,1,0],[1,1,1,0,0,1,1,1]];
+  var on = [true, true, true, true], mode = "fdm";
+  var X0 = 60, Y0 = 20, W = 680, H = 240, T = 8;
+  var info = {
+    fdm: ["频分复用：分车道，同时走", "总频带切成 4 个频段，每个用户一直占着自己的频段。广播电台、有线电视就是这样：每个台一个频率。"],
+    tdm: ["时分复用：单车道，轮流走", "时间切成一帧帧，每帧 4 个时隙，用户按固定顺序轮流占用整个频带。轮到你时即使没数据，时隙也空着。"],
+    stdm: ["统计时分复用：谁有数据给谁", "时隙不再固定分给某人，而是按需分配。没话说的用户不占时隙，线路利用率高。这正是分组交换的思想（1.4.3 节）。"],
+    wdm: ["波分复用：一根光纤，多种颜色的光", "原理和频分复用一样，只是在光纤里按光的波长（颜色）划分。运营商骨干网一根光纤可同时传几十上百路。"]
+  };
+  function el(tag, a, txt) { var e = document.createElementNS(NS, tag); for (var k in a) e.setAttribute(k, a[k]); if (txt != null) e.textContent = txt; return e; }
+  function has(u, t) { return on[u] && pattern[u][t] === 1; }
+  function draw() {
+    var svg = $("cv"); svg.innerHTML = "";
+    svg.appendChild(el("line", { x1: X0, y1: Y0 + H, x2: X0 + W, y2: Y0 + H, stroke: "#999" }));
+    svg.appendChild(el("line", { x1: X0, y1: Y0, x2: X0, y2: Y0 + H, stroke: "#999" }));
+    svg.appendChild(el("text", { x: X0 + W - 30, y: Y0 + H + 18, "class": "ax" }, "时间 →"));
+    svg.appendChild(el("text", { x: 2, y: Y0 + 10, "class": "ax" }, mode === "wdm" ? "波长 ↑" : "频率 ↑"));
+    var used = 0, alloc = 0, sent = 0, demand = 0;
+    for (var u = 0; u < 4; u++) for (var t = 0; t < T; t++) if (has(u, t)) demand++;
+    function box(x, y, w, h, u, full) {
+      if (full) { svg.appendChild(el("rect", { x: x + 1, y: y + 1, width: w - 2, height: h - 2, fill: C[u], rx: 3, opacity: mode === "wdm" ? .75 : 1 })); }
+      else svg.appendChild(el("rect", { x: x + 1, y: y + 1, width: w - 2, height: h - 2, fill: "none", stroke: "#bbb", "stroke-dasharray": "4 3", rx: 3 }));
+    }
+    if (mode === "fdm" || mode === "wdm") {
+      var bh = H / 4, cw = W / T;
+      for (u = 0; u < 4; u++) {
+        for (t = 0; t < T; t++) { alloc++; var f = has(u, t); if (f) used++; box(X0 + t * cw, Y0 + u * bh, cw, bh, u, f); }
+        svg.appendChild(el("text", { x: X0 - 4, y: Y0 + u * bh + bh / 2 + 4, "class": "ax", "text-anchor": "end" }, mode === "wdm" ? "λ" + (u + 1) : "f" + (u + 1)));
+      }
+      sent = used;
+    } else if (mode === "tdm") {
+      var sw = W / (T * 4);
+      for (t = 0; t < T; t++) for (u = 0; u < 4; u++) { alloc++; var g = has(u, t); if (g) used++; box(X0 + (t * 4 + u) * sw, Y0, sw, H, u, g); }
+      sent = used;
+    } else {
+      var queue = [];
+      for (t = 0; t < T; t++) for (u = 0; u < 4; u++) if (has(u, t)) queue.push(u);
+      var sw2 = W / (T * 4);
+      for (var k = 0; k < T * 4; k++) { if (k < queue.length) { box(X0 + k * sw2, Y0, sw2, H, queue[k], true); used++; } }
+      alloc = queue.length; sent = queue.length;
+      if (queue.length < T * 4) svg.appendChild(el("text", { x: X0 + queue.length * sw2 + 8, y: Y0 + H / 2, "class": "ax" }, "← 线路空出来，可以给更多用户用"));
+    }
+    $("t").textContent = info[mode][0]; $("msg").textContent = info[mode][1];
+    if (mode === "stdm") $("eff").textContent = "共有 " + demand + " 块数据，用掉 " + sent + " 个时隙，没有一个时隙被浪费；省下的时隙可以再接入其他用户。";
+    else $("eff").textContent = "分出去 " + alloc + " 块，真正用上 " + used + " 块，利用率 " + (alloc ? Math.round(used / alloc * 100) : 0) + "%。试着取消勾选某个用户，看浪费有多少。";
+    Array.prototype.forEach.call(document.querySelectorAll("[data-m]"), function (b) { b.className = b.dataset.m === mode ? "on" : ""; });
+  }
+  $("us").innerHTML = names.map(function (n, i) { return '<label><input type="checkbox" data-u="' + i + '" checked><i style="background:' + C[i] + '"></i>' + n + "</label>"; }).join("");
+  Array.prototype.forEach.call(document.querySelectorAll("[data-u]"), function (c) { c.onchange = function () { on[+c.dataset.u] = c.checked; draw(); }; });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-m]"), function (b) { b.onclick = function () { mode = b.dataset.m; draw(); }; });
+  draw();
+})();
+</script>
+<script src="../common/sim.js"></script>
+</body>
+</html>

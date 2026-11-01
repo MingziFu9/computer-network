@@ -55,6 +55,9 @@ nav:
     - "时延计算器": sims/delay-calculator/index.md
     - "层层装信封": sims/encapsulation/index.md
     - "协议对号入座": sims/layer-sort/index.md
+    - "编码与调制": sims/encoding/index.md
+    - "复用": sims/multiplexing/index.md
+    - "T568B 线序": sims/rj45-order/index.md
   - 学习图谱: learning-graph/index.md
   - 常见问题: faq/index.md
   - "在线模拟卷": mock-exam.md

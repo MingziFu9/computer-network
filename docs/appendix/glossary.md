@@ -77,6 +77,36 @@ description: 本书主要术语的中英文名称、简明定义和例子，按�
 
 | 术语 | 英文 | 定义 | 例子 |
 |---|---|---|---|
+| <span id="g-数据"></span>数据 | Data | 要传送的信息，在计算机里表示为 0 和 1 | 一张照片在硬盘上就是一长串 0 和 1 |
+| <span id="g-信号"></span>信号 | Signal | 数据的电气或电磁表现，分为模拟信号和数字信号 | 网线上的电压变化、WiFi 的电磁波 |
+| <span id="g-模拟信号"></span>模拟信号 | Analog Signal | 随时间连续变化的信号 | 声音的波形、老式电话线上的信号 |
+| <span id="g-数字信号"></span>数字信号 | Digital Signal | 只取几个固定值的信号 | 高电平表示 1、低电平表示 0 |
+| <span id="g-码元"></span>码元 | Signal Element | 信号波形中代表一个数字值的基本波形，即一个时间小格里的信号 | 一个码元有 16 种状态时可携带 4 个比特 |
+| <span id="g-信道"></span>信道 | Channel | 向某一个方向传送信息的通路 | 一条网线里有发送信道和接收信道 |
+| <span id="g-单工"></span>单工 | Simplex | 只能单向传送的通信方式 | 广播电台、电视 |
+| <span id="g-半双工"></span>半双工 | Half Duplex | 双方都能发送但不能同时发送的通信方式 | 对讲机；WiFi 同一信道 |
+| <span id="g-全双工"></span>全双工 | Full Duplex | 双方可以同时发送和接收的通信方式 | 打电话；交换机连接的以太网 |
+| <span id="g-基带信号"></span>基带信号 | Baseband Signal | 来自信源、未经调制的原始数字信号 | 电脑网卡送出的 0、1 电平 |
+| <span id="g-编码"></span>编码 | Encoding | 把数字信号变换成另一种数字信号，以便在线路上传输 | 以太网的曼彻斯特编码 |
+| <span id="g-调制"></span>调制 | Modulation | 把数字信号装到高频载波上变成模拟信号，分调幅、调频、调相 | 光猫、WiFi 路由器都要做调制 |
+| <span id="g-曼彻斯特编码"></span>曼彻斯特编码 | Manchester Encoding | 每个码元中间都有跳变的编码，本书约定向上跳为 1、向下跳为 0，自带同步 | 早期 10 Mbit/s 以太网 |
+| <span id="g-码间串扰"></span>码间串扰 | Intersymbol Interference | 码元传得太快，前后码元的波形混在一起无法分辨的现象 | 奈氏准则给出了避免它的速率上限 |
+| <span id="g-频带宽度"></span>频带宽度 | Bandwidth | 信道能通过的最高频率减去最低频率，单位赫兹（Hz） | 电话话音信道约 3 100 Hz |
+| <span id="g-波特"></span>波特 | Baud | 码元传输速率的单位，每秒传输一个码元为 1 波特 | 一个码元带 4 比特时，1 000 波特 = 4 000 bit/s |
+| <span id="g-信噪比"></span>信噪比 | Signal-to-Noise Ratio | 信号平均功率与噪声平均功率之比，常用分贝表示 | 30 dB 表示信号功率是噪声的 1 000 倍 |
+| <span id="g-信道容量"></span>信道容量 | Channel Capacity | 带噪声信道的极限信息传输速率，由香农公式给出 | C = W log₂(1 + S/N) |
+| <span id="g-香农公式"></span>香农公式 | Shannon Formula | C = W log₂(1 + S/N)，给出带宽和信噪比一定时的极限传输速率 | 带宽 3 000 Hz、信噪比 30 dB 时约 30 kbit/s |
+| <span id="g-双绞线"></span>双绞线 | Twisted Pair | 把两根绝缘铜线按一定规律绞在一起以减少干扰的传输介质，一段最长 100 米 | 办公室的网线 |
+| <span id="g-直通线"></span>直通线 | Straight-through Cable | 两端都按 T568B 线序制作的网线，用来连接不同种类设备 | 电脑连交换机 |
+| <span id="g-光纤"></span>光纤 | Optical Fiber | 用光脉冲传输数据的传输介质，带宽大、损耗小、抗干扰 | 运营商骨干网、光纤到户 |
+| <span id="g-单模光纤"></span>单模光纤 | Single-mode Fiber | 纤芯很细、只让一条光线直线传播的光纤，适合远距离 | 城市之间的长途光缆 |
+| <span id="g-多模光纤"></span>多模光纤 | Multi-mode Fiber | 纤芯较粗、允许多条光线反射传播的光纤，适合短距离 | 机房内交换机之间的连接 |
+| <span id="g-光纤到户"></span>光纤到户 | Fiber To The Home | 把光纤直接铺进用户家中的宽带接入方式，简称 FTTH | 家里的千兆宽带 |
+| <span id="g-无源光网络"></span>无源光网络 | Passive Optical Network | 用无源分光器把一根光纤分给多户使用的光纤接入网，简称 PON | 光猫背后标着 PON 的接口 |
+| <span id="g-复用"></span>复用 | Multiplexing | 让多路信号共享同一条传输线路的技术 | 一根光纤同时传上百路信号 |
+| <span id="g-时分复用"></span>时分复用 | Time Division Multiplexing | 把时间分成时隙，各路信号轮流占用整个频带的复用方式 | 传统电话中继线 |
+| <span id="g-波分复用"></span>波分复用 | Wavelength Division Multiplexing | 在一根光纤中同时传多种不同波长的光，是光的频分复用 | 运营商骨干网 |
+| <span id="g-光模块"></span>光模块 | Optical Module | 在光纤两端把电信号和光信号互相转换的部件 | 插在交换机光口上的 SFP 模块 |
 
 ## 第 4 章 数据链路层与以太网交换
 

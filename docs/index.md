@@ -30,8 +30,8 @@
 | 章 | 正文字数 | 实验 | 课后练习<br>（可在线作答） | 术语 | 参考文献 | 交互动画 |
 |---|---|---|---|---|---|---|
 | [第 1 章](chapters/01-intro/index.md) | 0.9 万 | 3 | 20（16） | 30 | 5 | 2 |
-| [第 2 章](chapters/02-architecture/index.md) | 0.1 万 | 3 | 5（3） | 0 | 1 | 0 |
-| [第 3 章](chapters/03-physical/index.md) | 0.1 万 | 3 | 5（3） | 0 | 1 | 0 |
+| [第 2 章](chapters/02-architecture/index.md) | 0.7 万 | 3 | 20（16） | 24 | 5 | 2 |
+| [第 3 章](chapters/03-physical/index.md) | 0.8 万 | 3 | 20（16） | 30 | 5 | 3 |
 | [第 4 章](chapters/04-datalink/index.md) | 0.1 万 | 3 | 5（3） | 0 | 1 | 0 |
 | [第 5 章](chapters/05-vlan-wlan/index.md) | 0.1 万 | 3 | 5（3） | 0 | 1 | 0 |
 | [第 6 章](chapters/06-ip-address/index.md) | 0.1 万 | 3 | 5（3） | 0 | 1 | 0 |
@@ -41,9 +41,9 @@
 | [第 10 章](chapters/10-application/index.md) | 0.1 万 | 3 | 5（3） | 0 | 1 | 0 |
 | [第 11 章](chapters/11-security/index.md) | 0.1 万 | 3 | 5（3） | 0 | 1 | 0 |
 | [第 12 章](chapters/12-management/index.md) | 0.1 万 | 3 | 5（3） | 0 | 1 | 0 |
-| **合计** | **1.7 万** | **36** | **75（49）** | **30** | **16** | **2** |
+| **合计** | **3.1 万** | **36** | **105（75）** | **84** | **24** | **7** |
 
-正文字数只统计汉字，不含代码和课后练习；单选、多选和判断题可以在网页上直接作答。配套学习资源：[交互动画](sims/index.md) 2 个 · [学习图谱](learning-graph/index.md) 137 个概念 · [常见问题](faq/index.md) 0 问 · [术语表](appendix/glossary.md) 30 条。
+正文字数只统计汉字，不含代码和课后练习；单选、多选和判断题可以在网页上直接作答。配套学习资源：[交互动画](sims/index.md) 7 个 · [学习图谱](learning-graph/index.md) 137 个概念 · [常见问题](faq/index.md) 0 问 · [术语表](appendix/glossary.md) 84 条。
 
 <!-- stats:end -->
 
@@ -54,7 +54,7 @@
 |---|---|
 | [第 1 章 认识计算机网络](chapters/01-intro/index.md) | 实验 1-1 ★ 摸清我的网络：ipconfig 与网络草图<br>实验 1-2 ★ 用 ping 测往返时间和丢包率<br>实验 1-3 ☆ 测网速，换算 Mbps 与 MB/s |
 | [第 2 章 网络体系结构：分层与协议](chapters/02-architecture/index.md) | 实验 2-1 ★ 安装 Wireshark，打开抓包文件看五层<br>实验 2-2 ★ 抓自己的包，用过滤器找 DNS 和 HTTPS<br>实验 2-3 ☆ 协议和设备对号入座 |
-| [第 3 章 物理层：从比特到信号](chapters/03-physical/index.md) | 实验 3-1 ★ 实验名称<br>实验 3-2 ★ 实验名称<br>实验 3-3 ★ 实验名称 |
+| [第 3 章 物理层：从比特到信号](chapters/03-physical/index.md) | 实验 3-1 ★ 认识网线和接口，排出 T568B 线序<br>实验 3-2 ★ 看懂无线信号：信号强度、信道和速率<br>实验 3-3 ☆ 带宽与下载时间：算一算再测一测 |
 | [第 4 章 数据链路层与以太网交换](chapters/04-datalink/index.md) | 实验 4-1 ★ 实验名称<br>实验 4-2 ★ 实验名称<br>实验 4-3 ★ 实验名称 |
 | [第 5 章 VLAN 与无线局域网](chapters/05-vlan-wlan/index.md) | 实验 5-1 ★ 实验名称<br>实验 5-2 ★ 实验名称<br>实验 5-3 ★ 实验名称 |
 | [第 6 章 IP 地址：IPv4、子网划分与 IPv6](chapters/06-ip-address/index.md) | 实验 6-1 ★ 实验名称<br>实验 6-2 ★ 实验名称<br>实验 6-3 ★ 实验名称 |
