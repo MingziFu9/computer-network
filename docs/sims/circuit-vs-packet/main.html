@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>电路交换与分组交换</title>
+<link rel="stylesheet" href="../common/sim.css">
+<style>
+.tl { display:grid; gap:2px; margin-top:6px; }
+.cell { height:26px; border-radius:3px; font-size:11px; display:flex; align-items:center; justify-content:center; color:#fff; }
+.c-A { background:#3f51b5; } .c-B { background:#43a047; } .c-C { background:#ef6c00; }
+.c-setup { background:repeating-linear-gradient(45deg,#ffcc80,#ffcc80 4px,#fff3e0 4px,#fff3e0 8px); color:#bf360c; }
+.c-held { background:#cfd8dc; color:#546e7a; } .c-idle { background:#f5f5f5; color:#bbb; }
+.cur { outline:2px solid #263238; }
+.lbl { font-size:12px; color:var(--muted); }
+.legend span { display:inline-block; margin-right:10px; font-size:12px; }
+.legend i { display:inline-block; width:14px; height:12px; border-radius:2px; vertical-align:-1px; margin-right:3px; }
+</style>
+</head>
+<body>
+<h1>电路交换与分组交换：同一条线，谁先送完？</h1>
+<div class="sub">A、B、C 三人先后要发 4 块数据，数据是“一阵一阵”产生的。一格代表一个时间单位，一条线一次只能传一块。点“开始”逐格播放。</div>
+<div class="row">
+  <button class="on" id="m-circuit">电路交换</button>
+  <button id="m-packet">分组交换</button>
+  <button class="main" id="play">开始</button>
+  <button id="reset">重来</button>
+</div>
+<div class="legend">
+  <span><i class="c-A"></i>A 的数据</span><span><i class="c-B"></i>B 的数据</span><span><i class="c-C"></i>C 的数据</span>
+  <span><i class="c-setup"></i>拨号建立连接</span><span><i class="c-held"></i>线被占着但没传数据</span><span><i class="c-idle"></i>空闲</span>
+</div>
+<div class="box"><h2 id="title">共享链路上每个时间单位在传什么</h2><div class="tl" id="tl"></div><div class="lbl" id="axis"></div></div>
+<div class="box"><h2>结果</h2><table class="t" id="res"></table><div class="msg" id="msg"></div></div>
+<div class="note">简化模型：不计首部开销和传播时延；分组交换中谁的数据先到谁先发。真实网络里分组还要排队，时延会有波动。</div>
+<script>
+(function () {
+  var USERS = [
+    { n: "A", ready: 0, rel: [0, 1, 4, 5] },
+    { n: "B", ready: 1, rel: [0, 1, 2, 6] },
+    { n: "C", ready: 2, rel: [0, 3, 4, 5] }
+  ];
+  var SETUP = 2;
+  function circuit() {
+    var slots = [], t = 0, fin = {};
+    USERS.forEach(function (u) {
+      t = Math.max(t, u.ready);
+      for (var i = 0; i < SETUP; i++) slots[t++] = { k: "setup", u: u.n };
+      var start = t, last = u.rel[u.rel.length - 1];
+      for (var r = 0; r <= last; r++) slots[start + r] = u.rel.indexOf(r) >= 0 ? { k: u.n } : { k: "held", u: u.n };
+      t = start + last + 1; fin[u.n] = t;
+    });
+    return { slots: slots, fin: fin };
+  }
+  function packet() {
+    var pend = [], slots = [], fin = {}, sent = 0, total = 0;
+    USERS.forEach(function (u) { u.rel.forEach(function (r) { pend.push({ u: u.n, at: u.ready + r }); total++; }); });
+    for (var t = 0; sent < total; t++) {
+      var c = pend.filter(function (p) { return !p.done && p.at <= t; }).sort(function (a, b) { return a.at - b.at; })[0];
+      if (c) { c.done = true; sent++; slots[t] = { k: c.u }; fin[c.u] = t + 1; } else slots[t] = { k: "idle" };
+    }
+    return { slots: slots, fin: fin };
+  }
+  var mode = "circuit", step = -1, timer = null, data;
+  function build() {
+    data = mode === "circuit" ? circuit() : packet();
+    var n = data.slots.length, tl = document.getElementById("tl");
+    tl.style.gridTemplateColumns = "repeat(" + n + ", 1fr)";
+    tl.innerHTML = ""; var ax = [];
+    for (var i = 0; i < n; i++) {
+      var s = data.slots[i] || { k: "idle" }, d = document.createElement("div");
+      d.className = "cell c-idle"; d.id = "c" + i; d.dataset.k = s.k; d.dataset.u = s.u || "";
+      tl.appendChild(d); ax.push(i);
+    }
+    document.getElementById("axis").textContent = "时间：0 → " + n + " 个单位";
+    document.getElementById("res").innerHTML = ""; document.getElementById("msg").textContent = "";
+    step = -1;
+  }
+  function show(i) {
+    var d = document.getElementById("c" + i); if (!d) return;
+    var k = d.dataset.k;
+    d.className = "cell cur c-" + k;
+    d.textContent = k === "setup" ? "拨" + d.dataset.u : k === "held" ? d.dataset.u : (k === "idle" ? "" : k);
+    if (i > 0) document.getElementById("c" + (i - 1)).classList.remove("cur");
+  }
+  function finish() {
+    var n = data.slots.length, busy = data.slots.filter(function (s) { return s && /^[ABC]$/.test(s.k); }).length;
+    var h = "<tr><th>用户</th><th>开始要发</th><th>送完时刻</th><th>花了多久</th></tr>";
+    USERS.forEach(function (u) { h += "<tr><td>" + u.n + "</td><td>" + u.ready + "</td><td>" + data.fin[u.n] + "</td><td>" + (data.fin[u.n] - u.ready) + "</td></tr>"; });
+    document.getElementById("res").innerHTML = h;
+    document.getElementById("msg").innerHTML = "全部送完用了 <b>" + n + "</b> 个时间单位，线路真正在传数据的时间占 <b>" + Math.round(busy / n * 100) + "%</b>。" +
+      (mode === "circuit" ? "灰色格子是“占着线却没数据可传”，B、C 只能干等。换成分组交换再看。" : "三人的数据交错传输，线路几乎没有浪费，C 也不用等 A、B 全部传完。");
+  }
+  function tick() {
+    step++; show(step);
+    if (step >= data.slots.length - 1) { clearInterval(timer); timer = null; document.getElementById("play").textContent = "开始"; finish(); }
+  }
+  document.getElementById("play").onclick = function () {
+    if (timer) { clearInterval(timer); timer = null; this.textContent = "继续"; return; }
+    if (step >= data.slots.length - 1) build();
+    this.textContent = "暂停"; timer = setInterval(tick, 350);
+  };
+  document.getElementById("reset").onclick = function () { if (timer) clearInterval(timer); timer = null; document.getElementById("play").textContent = "开始"; build(); };
+  function setMode(m) {
+    mode = m; document.getElementById("m-circuit").className = m === "circuit" ? "on" : "";
+    document.getElementById("m-packet").className = m === "packet" ? "on" : "";
+    document.getElementById("reset").onclick();
+  }
+  document.getElementById("m-circuit").onclick = function () { setMode("circuit"); };
+  document.getElementById("m-packet").onclick = function () { setMode("packet"); };
+  build();
+})();
+</script>
+<script src="../common/sim.js"></script>
+</body>
+</html>

@@ -13,6 +13,36 @@ description: 本书主要术语的中英文名称、简明定义和例子，按�
 
 | 术语 | 英文 | 定义 | 例子 |
 |---|---|---|---|
+| <span id="g-计算机网络"></span>计算机网络 | Computer Network | 用通信线路和网络设备把多台功能独立的计算机连接起来，按共同规则交换数据、共享资源的系统 | 小禾工作室 5 台电脑和 1 台打印机连成的办公网 |
+| <span id="g-互连网"></span>互连网 | internet | 把多个网络连接起来形成的“网络的网络” | 把公司北京、广州两地的网络连在一起 |
+| <span id="g-互联网"></span>互联网 | Internet | 全球范围内采用 TCP/IP 协议、由大量网络互连而成的最大的计算机网络，也叫因特网 | 平时说的“上网” |
+| <span id="g-端系统"></span>端系统 | End System | 连在网络边缘、产生和使用数据的设备，也叫主机 | 电脑、手机、服务器、网络摄像头 |
+| <span id="g-通信链路"></span>通信链路 | Communication Link | 在设备之间传输数据的通道 | 网线、光纤、WiFi 无线信道 |
+| <span id="g-网络设备"></span>网络设备 | Network Device | 在链路交汇处转发或转换数据的设备 | 交换机、路由器、光猫、无线接入点 |
+| <span id="g-边缘部分"></span>边缘部分 | Edge Part | 互联网中由所有端系统组成、用户直接使用的部分 | 家里的电脑和视频网站的服务器 |
+| <span id="g-核心部分"></span>核心部分 | Core Part | 互联网中由大量网络和路由器组成、为边缘部分提供连通服务的部分 | 运营商的骨干网 |
+| <span id="g-客户—服务器方式"></span>客户—服务器方式 | Client-Server Model | 一方请求服务、另一方提供服务的通信方式 | 浏览器（客户）访问网站服务器 |
+| <span id="g-光猫"></span>光猫 | Optical Network Terminal, ONT | 运营商安装在用户家里、把光纤中的光信号与网线中的电信号相互转换的设备 | 宽带师傅装在弱电箱里的小盒子 |
+| <span id="g-局域网"></span>局域网 | Local Area Network, LAN | 覆盖一栋楼或一个园区、通常由单位自己建设管理的网络 | 学校机房、工作室办公网 |
+| <span id="g-广域网"></span>广域网 | Wide Area Network, WAN | 覆盖城市、国家乃至全球，通常由运营商建设的网络 | 运营商的全国骨干网 |
+| <span id="g-拓扑"></span>拓扑 | Topology | 网络中设备和链路连接的几何形状，只看谁和谁相连 | 办公网是星形拓扑 |
+| <span id="g-交换"></span>交换 | Switching | 中间设备把数据从一条链路转送到另一条链路的过程 | 路由器把收到的分组转发到通往目的地的接口 |
+| <span id="g-电路交换"></span>电路交换 | Circuit Switching | 通信前先建立专用通路、通信期间一直独占、结束后释放的交换方式 | 老式固定电话通话 |
+| <span id="g-报文交换"></span>报文交换 | Message Switching | 把整份报文存储后再转发给下一节点的交换方式 | 早期的电报网 |
+| <span id="g-分组交换"></span>分组交换 | Packet Switching | 把数据切成带首部的小分组，逐个存储转发、共享线路的交换方式 | 互联网传输网页和视频 |
+| <span id="g-分组"></span>分组 | Packet | 分组交换中传送的数据单元，由首部和一段数据组成，也叫数据包 | 一段视频被切成的每个小包 |
+| <span id="g-存储转发"></span>存储转发 | Store and Forward | 节点先完整收下分组、检查后再转发出去的工作方式 | 路由器收下分组，查表后从另一个接口发出 |
+| <span id="g-速率"></span>速率 | Data Rate | 数据在链路上每秒传送的比特数，单位 bit/s | 千兆网卡的速率是 1 Gbit/s |
+| <span id="g-带宽"></span>带宽 | Bandwidth | 在计算机网络中通常指链路能达到的最高速率；在通信中指信号的频率范围 | “300 兆宽带”指最高 300 Mbit/s |
+| <span id="g-吞吐量"></span>吞吐量 | Throughput | 单位时间内实际通过某个网络或接口的数据量 | 1 Gbit/s 链路上实际只跑了 200 Mbit/s |
+| <span id="g-瓶颈链路"></span>瓶颈链路 | Bottleneck Link | 一条路径上速率最低、限制了端到端吞吐量的那段链路 | 有线 300 Mbps、WiFi 只有 20 Mbps 时 WiFi 是瓶颈 |
+| <span id="g-时延"></span>时延 | Delay | 数据从网络一端传到另一端所需的时间，由发送、传播、处理、排队四部分组成 | ping 显示的时间反映往返时延 |
+| <span id="g-发送时延"></span>发送时延 | Transmission Delay | 把一个分组的全部比特推上链路所需的时间，等于数据长度除以发送速率 | 10 MB 文件以 10 Mbit/s 发送需 8 秒 |
+| <span id="g-传播时延"></span>传播时延 | Propagation Delay | 信号在链路上从一端传到另一端所需的时间，等于链路长度除以传播速度 | 1 000 km 光纤的传播时延约 5 ms |
+| <span id="g-排队时延"></span>排队时延 | Queuing Delay | 分组在路由器缓存中等待被发送的时间，随网络拥挤程度变化 | 晚高峰时 ping 值明显变大 |
+| <span id="g-往返时间"></span>往返时间 | Round-Trip Time, RTT | 从发出数据到收到对方确认所经历的总时间 | ping 网关显示“时间=3ms” |
+| <span id="g-丢包率"></span>丢包率 | Packet Loss Rate | 一段时间内丢失的分组数占发出分组总数的比例 | 发 4 个收回 3 个，丢包率 25% |
+| <span id="g-RFC"></span>RFC | Request for Comments | 互联网工程任务组发布的互联网标准文档系列 | IP 协议由 RFC 791 定义 |
 
 ## 第 2 章 网络体系结构：分层与协议
 

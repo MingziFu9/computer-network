@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>时延计算器</title>
+<link rel="stylesheet" href="../common/sim.css">
+<style>
+.ctl { display:grid; grid-template-columns:6.5em 1fr 7.5em; gap:6px; align-items:center; margin:4px 0; font-size:13px; }
+.ctl .v { text-align:right; font-variant-numeric:tabular-nums; }
+.stack { display:flex; height:30px; border-radius:4px; overflow:hidden; margin:8px 0; background:#f5f5f5; }
+.stack div { transition:width .25s; }
+.k1 { background:#3f51b5; } .k2 { background:#43a047; } .k3 { background:#8e24aa; } .k4 { background:#ef6c00; }
+.legend span { display:inline-block; margin-right:12px; font-size:12px; }
+.legend i { display:inline-block; width:12px; height:12px; border-radius:2px; vertical-align:-1px; margin-right:3px; }
+.calc { font-size:13px; line-height:1.9; }
+</style>
+</head>
+<body>
+<h1>时延计算器：发送、传播、处理、排队，谁是大头？</h1>
+<div class="sub">拖动滑块，下面的彩条按比例显示四种时延。信号传播速度按 2×10⁸ m/s，处理时延按每个节点 0.05 ms、共 10 个节点计算；数据量按 1 MB = 10⁶ 字节。</div>
+<div class="row ex"><span class="lbl">试试：</span>
+  <button data-p="0">10 MB 效果图 · 10 Mbps · 1 000 km</button>
+  <button data-p="1">同上，换 100 Mbps</button>
+  <button data-p="2">一句微信 100 字节 · 2 000 km</button>
+  <button data-p="3">网络拥塞时的微信</button>
+</div>
+<div class="ctl"><span>数据量</span><input type="range" id="size" min="0" max="100" step="1"><span class="v" id="vs"></span></div>
+<div class="ctl"><span>发送速率</span><input type="range" id="rate" min="0" max="100" step="1"><span class="v" id="vr"></span></div>
+<div class="ctl"><span>距离</span><input type="range" id="dist" min="0" max="100" step="1"><span class="v" id="vd"></span></div>
+<div class="ctl"><span>排队时延</span><input type="range" id="queue" min="0" max="300" step="1"><span class="v" id="vq"></span></div>
+<div class="box">
+  <h2>总时延 <span class="big" id="total"></span></h2>
+  <div class="stack"><div class="k1" id="b1"></div><div class="k2" id="b2"></div><div class="k3" id="b3"></div><div class="k4" id="b4"></div></div>
+  <div class="legend"><span><i class="k1"></i>发送</span><span><i class="k2"></i>传播</span><span><i class="k3"></i>处理</span><span><i class="k4"></i>排队</span></div>
+  <div class="calc" id="calc"></div>
+  <div class="msg" id="msg"></div>
+</div>
+<script>
+(function () {
+  // 对数刻度：滑块 0~100 映射到 [lo, hi]
+  function logmap(v, lo, hi) { return lo * Math.pow(hi / lo, v / 100); }
+  function inv(x, lo, hi) { return Math.round(Math.log(x / lo) / Math.log(hi / lo) * 100); }
+  var R = { size: [100, 1e9], rate: [1e6, 1e10], dist: [0.1, 20000] };   // 字节、bit/s、km
+  function fmtB(b) { return b >= 1e9 ? (b / 1e9).toFixed(2) + " GB" : b >= 1e6 ? (b / 1e6).toFixed(b < 1e7 ? 2 : 0) + " MB" : b >= 1e3 ? (b / 1e3).toFixed(1) + " KB" : Math.round(b) + " 字节"; }
+  function fmtR(r) { return r >= 1e9 ? (r / 1e9).toFixed(r < 1e10 ? 1 : 0) + " Gbps" : (r / 1e6).toFixed(r < 1e7 ? 1 : 0) + " Mbps"; }
+  function fmtT(s) { return s >= 1 ? s.toFixed(2) + " s" : s >= 1e-3 ? (s * 1e3).toFixed(2) + " ms" : (s * 1e6).toFixed(1) + " μs"; }
+  var P = [
+    { size: 1e7, rate: 1e7, dist: 1000, q: 0 }, { size: 1e7, rate: 1e8, dist: 1000, q: 0 },
+    { size: 100, rate: 1e8, dist: 2000, q: 0 }, { size: 100, rate: 1e8, dist: 2000, q: 120 }
+  ];
+  var $ = function (id) { return document.getElementById(id); };
+  function set(p) {
+    $("size").value = inv(p.size, R.size[0], R.size[1]); $("rate").value = inv(p.rate, R.rate[0], R.rate[1]);
+    $("dist").value = inv(p.dist, R.dist[0], R.dist[1]); $("queue").value = p.q; render(p);
+  }
+  function render(exact) {
+    var size = exact ? exact.size : logmap(+$("size").value, R.size[0], R.size[1]);
+    var rate = exact ? exact.rate : logmap(+$("rate").value, R.rate[0], R.rate[1]);
+    var dist = exact ? exact.dist : logmap(+$("dist").value, R.dist[0], R.dist[1]);
+    var q = (+$("queue").value) / 1000;
+    var tx = size * 8 / rate, pr = dist * 1000 / 2e8, proc = 10 * 0.05e-3, tot = tx + pr + proc + q;
+    $("vs").textContent = fmtB(size); $("vr").textContent = fmtR(rate);
+    $("vd").textContent = dist < 1 ? Math.round(dist * 1000) + " m" : Math.round(dist) + " km"; $("vq").textContent = Math.round(q * 1000) + " ms";
+    $("total").textContent = fmtT(tot);
+    [tx, pr, proc, q].forEach(function (x, i) { $("b" + (i + 1)).style.width = (x / tot * 100) + "%"; });
+    $("calc").innerHTML = "发送时延 = " + fmtB(size) + " × 8 ÷ " + fmtR(rate) + " = <b>" + fmtT(tx) + "</b><br>" +
+      "传播时延 = " + (dist * 1000).toExponential(1).replace(/e\+(\d+)/, "×10<sup>$1</sup>") + " m ÷ 2×10⁸ m/s = <b>" + fmtT(pr) + "</b><br>" +
+      "处理时延 = 10 × 0.05 ms = <b>" + fmtT(proc) + "</b>　排队时延 = <b>" + fmtT(q) + "</b>";
+    var parts = [["发送时延", tx], ["传播时延", pr], ["处理时延", proc], ["排队时延", q]].sort(function (a, b) { return b[1] - a[1]; });
+    $("msg").innerHTML = "现在的大头是 <b>" + parts[0][0] + "</b>，占 " + Math.round(parts[0][1] / tot * 100) + "%。" +
+      (parts[0][0] === "发送时延" ? "提高带宽或压缩数据最有效。" : parts[0][0] === "传播时延" ? "带宽再高也没用，只有缩短距离（如就近部署服务器）才能减少。" : parts[0][0] === "排队时延" ? "网络拥塞了，排队时延变化最大，也最难预测。" : "");
+  }
+  ["size", "rate", "dist", "queue"].forEach(function (id) { $(id).oninput = function () { render(); }; });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-p]"), function (b) { b.onclick = function () { set(P[+b.dataset.p]); }; });
+  set(P[0]);
+})();
+</script>
+<script src="../common/sim.js"></script>
+</body>
+</html>
