@@ -1,5 +1,4 @@
-# 第 8 章教案底稿，由 python tools/make_lesson_plan.py draft 生成。
-# 改好“【待填】”的地方，删减或补充其他内容后运行 build。字段说明见 lesson-plans/README.md
+# 第 8 章教案，由 make_lesson_plan.py draft 生成后人工修改。线上：课前按节自主学习（线上理论学时）+ 课后线上实验（实验学时）；线下面授讲重点难点、讲评实验。
 chapter: 8
 online: 5
 offline: 1
@@ -18,86 +17,95 @@ objectives:
   skill:
   - 在 Packet Tracer 中配置路由器的 DHCP 和 NAT，让各部门自动获取地址并共享公网地址上网
   quality:
-  - 【待填】职业素养、科学态度或科技伦理方面的目标，1–2 条
+  - 认识 ARP 欺骗等风险，增强网络安全防范意识
+  - 理解私有地址与 IPv6，了解我国推进 IPv6 的意义
 key_points:
-- ARP：由 IP 地址问出 MAC 地址
-- ICMP：网络里的“回执与报错”
-- DHCP：自动分配地址
-- NAT：私有地址怎样上互联网
+- ARP 的工作过程
+- ICMP 报文与 ping、tracert 的原理
+- DHCP 的四个步骤
+- NAT 与 PAT 转换表
 difficulties:
-- point: 【待填】学生最容易卡住的 1–2 个难点
-  solution: 【待填】突破难点的办法，如动画演示、手算例子
+- point: DHCP 四个步骤中哪些是广播、为什么第三步还要广播
+  solution: 用 DHCP 动画逐步演示，结合 dhcp_arp.pcap 的四个报文看源、目的地址
+- point: PAT 如何用端口区分不同主机
+  solution: 用 NAT 转换表动画演示两台电脑同用 51001 端口时的转换，配合公司总机比喻
 process:
 - phase: 课前（线上）
   steps:
-  - name: 自主预习
-    minutes: 90
-    content: 阅读网页教材第 8 章 网络层的好帮手：ARP、ICMP、DHCP 与 NAT的情景导入和第一节，操作交互动画“ARP 问路”
-    teacher: 在学习平台发布预习任务和预习问题
-    student: 阅读教材、观看课件，在讨论区提出疑问
-    intent: 带着问题进课堂
-- phase: 课中（线下面授 / 直播）
+  - name: 自主学习
+    minutes: 35
+    content: 8.1 ARP：由 IP 地址问出 MAC 地址：为什么需要 ARP、ARP 的工作过程、ARP 缓存与 ARP 欺骗
+    teacher: 在学习平台发布本节学习任务和思考题，在线答疑
+    student: 阅读网页教材、观看课件、操作交互动画，完成节后小测
+    intent: 理解 ARP 的作用和 ARP 欺骗的危害
+  - name: 自主学习
+    minutes: 35
+    content: 8.2 ICMP：网络里的“回执与报错”：ICMP 是做什么的、ping 的原理、tracert 的原理
+    teacher: 在学习平台发布本节学习任务和思考题，在线答疑
+    student: 阅读网页教材、观看课件，完成节后小测
+    intent: 理解 ping、tracert 背后的 ICMP 报文
+  - name: 自主学习
+    minutes: 30
+    content: 8.3 DHCP：自动分配地址：为什么需要 DHCP、DHCP 的四个步骤（考点）、租期与续租、跨网段的 DHCP
+    teacher: 在学习平台发布本节学习任务和思考题，在线答疑
+    student: 阅读网页教材、观看课件、操作交互动画，完成节后小测
+    intent: 掌握 DHCP 的四个步骤，会配置 DHCP
+  - name: 自主学习
+    minutes: 30
+    content: 8.4 NAT：私有地址怎样上互联网：为什么需要 NAT、端口地址转换 PAT（考点）、NAT 的好处与麻烦
+    teacher: 在学习平台发布本节学习任务和思考题，在线答疑
+    student: 阅读网页教材、观看课件、操作交互动画，完成节后小测
+    intent: 理解 NAT 和 PAT，会读转换表
+  - name: 自主学习
+    minutes: 30
+    content: 8.5 家用路由器其实做了很多事
+    teacher: 在学习平台发布本节学习任务和思考题，在线答疑
+    student: 阅读网页教材、观看课件，完成节后小测
+    intent: 把前几章知识串起来认识家用路由器
+  - name: 自主学习
+    minutes: 10
+    content: 8.6 本章常见问题对照
+    teacher: 在学习平台发布本节学习任务和思考题，在线答疑
+    student: 阅读网页教材、观看课件，完成节后小测
+    intent: 把概念和常见故障对应起来
+  - name: 自主学习
+    minutes: 10
+    content: 8.7 AI 与网络：为什么手机上网拿不到公网地址
+    teacher: 在学习平台发布本节学习任务和思考题，在线答疑
+    student: 阅读网页教材、观看课件，完成节后小测
+    intent: 联系移动网络和 IPv6
+- phase: 课中（线下面授）
   steps:
   - name: 情景导入
-    minutes: 10
+    minutes: 5
     content: 情景导入：周一早上，设计部来了一位新同事小周。他把自己的笔记本插上网线，几秒钟后就打开了网页。小林有点奇怪：“我还没给他分配地址呢……
-    teacher: 讲述情景，提出本章要解决的问题
-    student: 思考并回答问题，说出自己的经验
+    teacher: 回顾情景，请学生说出线上学习中遇到的疑问
+    student: 结合情景提出问题，分享线上学习收获
     intent: 联系工作和生活场景，激发学习兴趣
-  - name: 讲授与演示
-    minutes: 5
-    content: 8.1 ARP：由 IP 地址问出 MAC 地址：为什么需要 ARP、ARP 的工作过程、ARP 缓存与 ARP 欺骗
-    teacher: 讲解要点，结合例子和“算一算”演示；用交互动画“ARP 问路”课堂演示
-    student: 听讲、跟着计算、操作动画并回答提问
-    intent: 【待填】
-  - name: 讲授
-    minutes: 5
-    content: 8.2 ICMP：网络里的“回执与报错”：ICMP 是做什么的、ping 的原理、tracert 的原理
-    teacher: 讲解要点，结合例子和“算一算”演示
-    student: 听讲、跟着计算、记录要点
-    intent: 【待填】
-  - name: 讲授与演示
-    minutes: 5
+  - name: 重点讲解
+    minutes: 10
     content: 8.3 DHCP：自动分配地址：为什么需要 DHCP、DHCP 的四个步骤（考点）、租期与续租、跨网段的 DHCP
-    teacher: 讲解要点，结合例子和“算一算”演示；用交互动画“DHCP 四步”课堂演示
-    student: 听讲、跟着计算、操作动画并回答提问
-    intent: 【待填】
-  - name: 讲授与演示
-    minutes: 5
+    teacher: 精讲本节重点和难点，结合交互动画和例题演示，针对线上小测中的错误答疑
+    student: 跟着推导、操作动画、回答提问，订正线上小测中的错误
+    intent: 掌握 DHCP 的四个步骤，会配置 DHCP
+  - name: 重点讲解
+    minutes: 10
     content: 8.4 NAT：私有地址怎样上互联网：为什么需要 NAT、端口地址转换 PAT（考点）、NAT 的好处与麻烦
-    teacher: 讲解要点，结合例子和“算一算”演示；用交互动画“NAT 转换表”课堂演示
-    student: 听讲、跟着计算、操作动画并回答提问
-    intent: 【待填】
-  - name: 讲授
-    minutes: 5
-    content: 8.5 家用路由器其实做了很多事
-    teacher: 讲解要点，结合例子和“算一算”演示
-    student: 听讲、跟着计算、记录要点
-    intent: 【待填】
-  - name: 讲授
-    minutes: 5
-    content: 8.6 本章常见问题对照
-    teacher: 讲解要点，结合例子和“算一算”演示
-    student: 听讲、跟着计算、记录要点
-    intent: 【待填】
-  - name: 拓展
-    minutes: 5
-    content: 8.7 AI 与网络：为什么手机上网拿不到公网地址
-    teacher: 讲解要点，结合例子和“算一算”演示
-    student: 听讲、跟着计算、记录要点
-    intent: 【待填】
-  - name: 实验
-    minutes: 5
-    content: 实验 8-1 看 ARP 和 DHCP 的包
-    teacher: 演示关键步骤，巡视指导，收集常见错误
-    student: 按步骤完成实验，填写记录表
-    intent: 查看本机的 ARP 缓存和 DHCP 租约信息；在抓包文件中找到 DHCP 四个报文和 ARP 请求、响应，读出关键字段
+    teacher: 精讲本节重点和难点，结合交互动画和例题演示，针对线上小测中的错误答疑
+    student: 跟着推导、操作动画、回答提问，订正线上小测中的错误
+    intent: 理解 NAT 和 PAT，会读转换表
   - name: 课堂练习
     minutes: 10
     content: 课后练习中的单选、判断题（在线作答，共 16 题，选做）
     teacher: 组织学生在网页上作答，讲评错误率高的题
     student: 在线作答，查看解析
     intent: 即时检验学习效果
+  - name: 实验讲评与答疑
+    minutes: 5
+    content: 讲评上一章实验报告中的共性问题，说明本章实验的关键步骤和注意事项
+    teacher: 展示典型实验结果和常见错误，布置本章实验
+    student: 对照讲评检查自己的实验，记录本章实验要点
+    intent: 衔接线上实验，减少实验中的卡顿
   - name: 小结
     minutes: 5
     content: 用本章知识导图回顾要点，预告下一章
@@ -106,8 +114,14 @@ process:
     intent: 形成知识结构
 - phase: 课后（线上）
   steps:
-  - name: 课后巩固
-    minutes: 135
+  - name: 线上实验
+    minutes: 45
+    content: 实验 8-1 看 ARP 和 DHCP 的包
+    teacher: 在学习平台发布实验指导，在线答疑，批改实验报告
+    student: 按教材步骤完成实验，填写记录表，提交实验报告
+    intent: 动手完成实验关键步骤，把本章知识用到实际操作中，为课后提交实验报告做准备
+  - name: 课后巩固（课外）
+    minutes: 60
     content: 完成本章课后练习（在线作答 16 题，简答 / 实操 4 题），提交实验报告
     teacher: 批改作业和实验报告，在讨论区答疑
     student: 完成练习，错题点“回看”复习对应小节
