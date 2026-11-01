@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>防火墙规则匹配</title>
+<link rel="stylesheet" href="../common/sim.css">
+<style>
+.rule { display:grid; grid-template-columns:2em 1fr auto; gap:6px; align-items:center; border:2px solid var(--line); border-radius:6px; padding:4px 6px; margin:4px 0; font-family:monospace; font-size:12.5px; transition:all .2s; }
+.rule .n { font-weight:bold; color:var(--muted); text-align:center; }
+.rule .why { grid-column:2 / 4; font-family:sans-serif; font-size:12px; color:var(--muted); }
+.rule.chk { border-color:#90a4ae; background:#eceff1; }
+.rule.hit-p { border-color:#43a047; background:#e8f5e9; }
+.rule.hit-d { border-color:#e53935; background:#ffebee; }
+.rule.skip { opacity:.55; }
+.rule.imp { border-style:dashed; }
+.rule button { padding:0 7px; font-size:12px; }
+.p { color:#2e7d32; font-weight:bold; } .d { color:#c62828; font-weight:bold; }
+select { font-size:13px; }
+</style>
+</head>
+<body>
+<h1>防火墙规则匹配：数据包能进服务器区吗？</h1>
+<div class="sub">三层交换机 VLAN 40（服务器区）接口 out 方向应用了扩展 ACL 110。规则与第 11 章 11.4.2 节、实验 11-2 一致。数据包从上到下逐条比较，<b>第一条匹配的规则</b>决定结果。</div>
+<div class="row">源
+  <select id="src"><option value="192.168.8.11">设计部 PC0 192.168.8.11</option><option value="192.168.8.70">财务部 PC1 192.168.8.70</option><option value="192.168.8.100">访客 PC2 192.168.8.100</option></select>
+  目的 <select id="dst"><option value="192.168.8.131">财务服务器 192.168.8.131</option><option value="192.168.8.130">内部网站 192.168.8.130</option></select>
+  服务 <select id="svc"><option value="tcp80">浏览网页（TCP 80）</option><option value="icmp">ping（ICMP）</option><option value="tcp3389">远程桌面（TCP 3389）</option></select></div>
+<div class="row"><button id="go" class="main">逐条匹配</button><button id="fast">直接看结果</button><button id="rs">恢复规则顺序</button></div>
+<div class="grid2">
+  <div class="box"><h2>access-list 110（可用 ↑ ↓ 调整顺序）</h2><div id="rules"></div></div>
+  <div class="box"><h2>数据包</h2><div class="mono" id="pkt"></div><div class="msg" id="msg"></div></div>
+</div>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  function ip2n(s) { return s.split(".").reduce(function (a, b) { return a * 256 + +b; }, 0); }
+  function inNet(ip, net, wc) { var a = ip2n(ip), n = ip2n(net), w = ip2n(wc); for (var i = 0; i < 32; i++) { var bit = Math.pow(2, i); if (Math.floor(w / bit) % 2 === 0 && Math.floor(a / bit) % 2 !== Math.floor(n / bit) % 2) return false; } return true; }
+  // 地址条件：null = any；{h:ip} = host；{n:网段, w:通配符掩码}
+  function addrOk(c, ip) { if (!c) return true; if (c.h) return c.h === ip; return inNet(ip, c.n, c.w); }
+  function addrTxt(c) { return !c ? "any" : c.h ? "host " + c.h : c.n + " " + c.w; }
+  function addrWhy(c, ip, role) {
+    if (!c) return role + "：any，任何地址都匹配";
+    if (c.h) return role + " " + ip + (c.h === ip ? " 就是 " : " 不是 ") + c.h;
+    var lo = c.n, hi = c.n.split(".").slice(0, 3).join(".") + "." + (+c.n.split(".")[3] + +c.w.split(".")[3]);
+    return role + " " + ip + (inNet(ip, c.n, c.w) ? " 在 " : " 不在 ") + lo + "～" + hi + " 范围内";
+  }
+  var ORIG = [
+    { a: "permit", pr: "ip", s: { n: "192.168.8.64", w: "0.0.0.31" }, d: { h: "192.168.8.131" }, note: "财务部 → 财务服务器" },
+    { a: "deny", pr: "ip", s: null, d: { h: "192.168.8.131" }, note: "其他人 → 财务服务器" },
+    { a: "deny", pr: "ip", s: { n: "192.168.8.96", w: "0.0.0.31" }, d: null, note: "访客 → 服务器区" },
+    { a: "permit", pr: "tcp", s: null, d: { h: "192.168.8.130" }, port: 80, note: "浏览内部网站" },
+    { a: "permit", pr: "icmp", s: null, d: null, note: "允许 ping" }
+  ];
+  var R = ORIG.slice(), timer = null;
+  function pkt() { var v = $("svc").value; return { s: $("src").value, d: $("dst").value, pr: v === "icmp" ? "icmp" : "tcp", port: v === "tcp80" ? 80 : v === "tcp3389" ? 3389 : null }; }
+  function txt(r) { return r.a + " " + r.pr + " " + addrTxt(r.s) + " " + addrTxt(r.d) + (r.port ? " eq " + r.port : ""); }
+  function match(r, p) {
+    var why = [], ok = true;
+    if (r.pr !== "ip" && r.pr !== p.pr) { ok = false; why.push("协议：规则要求 " + r.pr + "，数据包是 " + p.pr); }
+    else why.push("协议：" + (r.pr === "ip" ? "ip 表示任何协议，匹配" : r.pr + " 匹配"));
+    if (ok && !addrOk(r.s, p.s)) { ok = false; why.push(addrWhy(r.s, p.s, "源")); } else if (ok) why.push(addrWhy(r.s, p.s, "源"));
+    if (ok && !addrOk(r.d, p.d)) { ok = false; why.push(addrWhy(r.d, p.d, "目的")); } else if (ok) why.push(addrWhy(r.d, p.d, "目的"));
+    if (ok && r.port && r.port !== p.port) { ok = false; why.push("端口：规则要求 " + r.port + "，数据包是 " + (p.port || "无端口")); }
+    return { ok: ok, why: why.join("；") };
+  }
+  function draw(state) {   // state: {upto: 已检查到第几条, hit: 匹配的下标 或 -1, whys: []}
+    var h = "";
+    R.forEach(function (r, i) {
+      var c = "";
+      if (state) { if (i === state.hit) c = r.a === "permit" ? "hit-p" : "hit-d"; else if (i < state.upto) c = "chk"; else if (state.hit >= 0 && i > state.hit) c = "skip"; }
+      h += '<div class="rule ' + c + '"><span class="n">' + (i + 1) + '</span><span>' + txt(r) + '</span><span><button data-u="' + i + '">↑</button><button data-d="' + i + '">↓</button></span>' +
+        '<span class="why">' + r.note + (state && state.whys[i] ? "　|　" + state.whys[i] : "") + "</span></div>";
+    });
+    var ic = state && state.hit === R.length ? "hit-d" : state && state.hit >= 0 ? "skip" : "";
+    h += '<div class="rule imp ' + ic + '"><span class="n">—</span><span>deny ip any any（隐含，看不见）</span><span></span><span class="why">前面都不匹配时拒绝</span></div>';
+    $("rules").innerHTML = h;
+    Array.prototype.forEach.call(document.querySelectorAll("button[data-u]"), function (b) { b.onclick = function () { var i = +b.dataset.u; if (i > 0) { var t = R[i]; R[i] = R[i - 1]; R[i - 1] = t; reset(); } }; });
+    Array.prototype.forEach.call(document.querySelectorAll("button[data-d]"), function (b) { b.onclick = function () { var i = +b.dataset.d; if (i < R.length - 1) { var t = R[i]; R[i] = R[i + 1]; R[i + 1] = t; reset(); } }; });
+  }
+  function showPkt() { var p = pkt(); $("pkt").innerHTML = "源地址 " + p.s + "<br>目的地址 " + p.d + "<br>协议 " + p.pr + (p.port ? "，目的端口 " + p.port : ""); }
+  function finish(st) {
+    var p = pkt();
+    if (st.hit === R.length) $("msg").innerHTML = '<span class="d">拒绝</span>：所有规则都不匹配，被最后的隐含 deny any 拒绝。';
+    else { var r = R[st.hit]; $("msg").innerHTML = (r.a === "permit" ? '<span class="p">允许</span>' : '<span class="d">拒绝</span>') + "：第 " + (st.hit + 1) + " 条规则（" + r.note + "）第一个匹配，后面的规则不再检查。"; }
+  }
+  function run(animated) {
+    if (timer) clearInterval(timer);
+    var p = pkt(), st = { upto: 0, hit: -1, whys: [] };
+    showPkt();
+    function step() {
+      if (st.upto >= R.length) { st.hit = R.length; draw(st); finish(st); return true; }
+      var m = match(R[st.upto], p); st.whys[st.upto] = (m.ok ? "✔ 匹配：" : "✘ 不匹配：") + m.why;
+      if (m.ok) { st.hit = st.upto; st.upto++; draw(st); finish(st); return true; }
+      st.upto++; draw(st); $("msg").textContent = "第 " + st.upto + " 条不匹配，继续看下一条……"; return false;
+    }
+    if (!animated) { while (!step()); return; }
+    $("msg").textContent = "开始匹配……";
+    timer = setInterval(function () { if (step()) { clearInterval(timer); timer = null; } }, 900);
+  }
+  function reset() { if (timer) clearInterval(timer); draw(null); showPkt(); $("msg").textContent = "选好数据包，点“逐条匹配”。"; }
+  $("go").onclick = function () { run(true); };
+  $("fast").onclick = function () { run(false); };
+  $("rs").onclick = function () { R = ORIG.slice(); reset(); };
+  ["src", "dst", "svc"].forEach(function (id) { $(id).onchange = reset; });
+  reset();
+})();
+</script>
+<script src="../common/sim.js"></script>
+</body>
+</html>

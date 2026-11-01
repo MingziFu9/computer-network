@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>对称与非对称加密</title>
+<link rel="stylesheet" href="../common/sim.css">
+<style>
+.tabs button { border-radius:6px 6px 0 0; }
+.hide { display:none; }
+.out { font-family:monospace; font-size:13px; background:#f5f5f5; border-radius:6px; padding:6px 8px; min-height:2em; word-break:break-all; }
+.who { font-weight:bold; color:var(--accent); }
+.key { display:inline-block; padding:1px 8px; border-radius:10px; font-size:12px; font-family:monospace; }
+.pub { background:#e3f2fd; color:#1565c0; } .pri { background:#fce4ec; color:#ad1457; } .sym { background:#fff3e0; color:#e65100; }
+input[type=number] { width:7em; padding:5px; border:1px solid var(--line); border-radius:6px; }
+</style>
+</head>
+<body>
+<h1>对称加密、非对称加密与数字签名</h1>
+<div class="sub">动画中的算法是为了演示而简化的教学算法（字符位移、小数字的 RSA、简化哈希），真实系统使用 AES、SM4、RSA、SM2、SHA-256、SM3 等算法，密钥长得多。</div>
+<div class="row tabs"><button id="t1" class="on">对称加密</button><button id="t2">非对称加密</button><button id="t3">数字签名</button></div>
+
+<div id="p1">
+  <div class="box">
+    <div><span class="who">小林</span> 和 <span class="who">阿美</span> 事先当面约定了一把共享密钥 <span class="key sym">对称密钥</span>：加密和解密都用它。</div>
+    <div class="row">明文 <input type="text" id="m1" value="周三下午三点开会，带上设计稿"></div>
+    <div class="row">小林加密用的密钥 <input type="number" id="k1" value="2026" min="1" max="9999"><button id="e1" class="main">加密</button></div>
+    <div class="out" id="c1"></div>
+    <div class="row">阿美解密用的密钥 <input type="number" id="k2" value="2026" min="1" max="9999"><button id="d1">解密</button></div>
+    <div class="out" id="r1"></div>
+    <div class="msg" id="s1">先点“加密”，再点“解密”。然后把解密密钥改成别的数字试试。</div>
+  </div>
+</div>
+
+<div id="p2" class="hide">
+  <div class="box">
+    <div><span class="who">禾姐</span> 生成了一对密钥：<span class="key pub">公钥 (e=17, n=66013)</span> 公开给所有人，<span class="key pri">私钥 (d, n)</span> 只有她自己知道。</div>
+    <div class="row">小林要发给禾姐的明文 <input type="text" id="m2" value="新客户报价 38 万"></div>
+    <div class="row"><button id="e2" class="main">用禾姐的公钥加密</button></div>
+    <div class="out" id="c2"></div>
+    <div class="row">用哪把钥匙解密？
+      <button id="d2a">禾姐的私钥</button><button id="d2b">禾姐的公钥</button><button id="d2c">偷听者自己的私钥</button></div>
+    <div class="out" id="r2"></div>
+    <div class="msg" id="s2">密文中每个数字对应明文的一个字。公钥加密后，连小林自己也解不开。</div>
+  </div>
+</div>
+
+<div id="p3" class="hide">
+  <div class="box">
+    <div><span class="who">禾姐</span> 发通知给全体员工，用自己的 <span class="key pri">私钥</span> 签名；大家用禾姐的 <span class="key pub">公钥</span> 验证。</div>
+    <div class="row">禾姐的原文 <input type="text" id="m3" value="本月工资 10 号发放，收款账号不变"></div>
+    <div class="row"><button id="g3" class="main">① 算哈希并用私钥签名</button></div>
+    <div class="out" id="sg"></div>
+    <div class="row">员工收到的文件（可以改动，模拟被篡改） <input type="text" id="rv"></div>
+    <div class="row"><button id="v3">② 用禾姐的公钥验证</button></div>
+    <div class="out" id="vr"></div>
+    <div class="msg" id="s3">先签名，再验证；然后把收到的文件改一个字（比如把“不变”改成“已变更”）再验证。</div>
+  </div>
+</div>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  ["1", "2", "3"].forEach(function (i) { $("t" + i).onclick = function () { ["1", "2", "3"].forEach(function (j) { $("p" + j).classList.toggle("hide", i !== j); $("t" + j).classList.toggle("on", i === j); }); }; });
+
+  // ---- 对称：每个字符按密钥位移（汉字在常用汉字区内循环，其他可见字符在 ASCII 区内循环）----
+  function shift(text, k) {
+    return Array.from(text).map(function (ch) {
+      var c = ch.codePointAt(0);
+      if (c >= 0x4E00 && c <= 0x9FA5) return String.fromCodePoint(0x4E00 + (((c - 0x4E00 + k) % 20902) + 20902) % 20902);
+      if (c >= 32 && c <= 126) return String.fromCodePoint(32 + (((c - 32 + k) % 95) + 95) % 95);
+      return ch;
+    }).join("");
+  }
+  var cipher1 = "";
+  $("e1").onclick = function () { cipher1 = shift($("m1").value, +$("k1").value); $("c1").textContent = "密文：" + cipher1; $("r1").textContent = ""; $("s1").textContent = "密文看起来是一串没有意义的字，在网上传送时别人看不懂。"; };
+  $("d1").onclick = function () {
+    if (!cipher1) { $("s1").textContent = "先加密。"; return; }
+    var p = shift(cipher1, -$("k2").value), ok = p === $("m1").value;
+    $("r1").textContent = "解密结果：" + p;
+    $("s1").innerHTML = ok ? '<span class="ok">密钥相同，还原成功。</span>难题是：这把密钥怎样安全地交给阿美？通过网络发过去，被人截获就全完了。' : '<span class="bad">密钥不对，得到的是乱码。</span>没有同一把钥匙就打不开。';
+  };
+
+  // ---- 非对称：小数字的 RSA（p=251, q=263）----
+  function modpow(b, e, m) { var r = 1n; b = BigInt(b) % BigInt(m); e = BigInt(e); m = BigInt(m); while (e > 0n) { if (e & 1n) r = r * b % m; b = b * b % m; e >>= 1n; } return Number(r); }
+  function inv(a, m) { var t = 0, nt = 1, r = m, nr = a; while (nr) { var q = Math.floor(r / nr); var x = t - q * nt; t = nt; nt = x; x = r - q * nr; r = nr; nr = x; } return (t % m + m) % m; }
+  var N = 251 * 263, E = 17, D = inv(17, 250 * 262);           // 禾姐的密钥对
+  var N2 = 241 * 271, D2 = inv(17, 240 * 270);                  // 偷听者自己的密钥对
+  var cipher2 = [];
+  function toText(nums) { return nums.map(function (x) { return x >= 32 && x < 0xD800 ? String.fromCodePoint(x) : "?"; }).join(""); }
+  $("e2").onclick = function () {
+    cipher2 = Array.from($("m2").value).map(function (ch) { return modpow(ch.codePointAt(0), E, N); });
+    $("c2").textContent = "密文：" + cipher2.join(" "); $("r2").textContent = "";
+    $("s2").textContent = "用禾姐的公钥加密完成。谁都可以拿到公钥来加密，但解密要看是哪把钥匙。";
+  };
+  function dec(d, n, name, good) {
+    if (!cipher2.length) { $("s2").textContent = "先加密。"; return; }
+    $("r2").textContent = name + "解密：" + toText(cipher2.map(function (c) { return modpow(c, d, n); }));
+    $("s2").innerHTML = good ? '<span class="ok">只有禾姐的私钥能还原明文。</span>公钥可以放心公开，这就解决了“钥匙怎么交给对方”的问题。' : '<span class="bad">解不开，得到的是乱码。</span>' + (name.indexOf("公钥") >= 0 ? "公钥只能加密，不能解开用它加密的数据。" : "偷听者有自己的密钥对也没用，必须是配对的那把私钥。");
+  }
+  $("d2a").onclick = function () { dec(D, N, "用禾姐的私钥", true); };
+  $("d2b").onclick = function () { dec(E, N, "用禾姐的公钥", false); };
+  $("d2c").onclick = function () { dec(D2, N2, "用偷听者的私钥", false); };
+
+  // ---- 数字签名：简化哈希（FNV-1a）→ 私钥签名 → 公钥验证 ----
+  function h(text) { var x = 0x811c9dc5; Array.from(new TextEncoder().encode(text)).forEach(function (b) { x ^= b; x = Math.imul(x, 0x01000193) >>> 0; }); return x % N; }
+  var sig = null, signed = "";
+  $("g3").onclick = function () {
+    signed = $("m3").value; var hv = h(signed); sig = modpow(hv, D, N);
+    $("sg").textContent = "原文哈希值 = " + hv + "　→　用私钥签名得到签名值 = " + sig;
+    $("rv").value = signed; $("vr").textContent = "";
+    $("s3").textContent = "文件和签名一起发出。现在可以直接验证，也可以先改动“收到的文件”。";
+  };
+  $("v3").onclick = function () {
+    if (sig === null) { $("s3").textContent = "先签名。"; return; }
+    var a = modpow(sig, E, N), b = h($("rv").value);
+    $("vr").textContent = "用公钥解开签名得到 " + a + "；对收到的文件重新算哈希得到 " + b;
+    $("s3").innerHTML = a === b ? '<span class="ok">两个值相同，验证通过：</span>文件确实来自禾姐（只有她有私钥），而且没有被改过。' : '<span class="bad">两个值不同，验证失败：</span>文件在路上被改过，或者签名不是禾姐的。不要相信这份文件。';
+  };
+})();
+</script>
+<script src="../common/sim.js"></script>
+</body>
+</html>

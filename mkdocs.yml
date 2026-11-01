@@ -73,6 +73,9 @@ nav:
     - "滑动窗口与拥塞控制": sims/sliding-window/index.md
     - "输入网址之后": sims/after-url/index.md
     - "DNS 查询之旅": sims/dns-journey/index.md
+    - "对称与非对称加密": sims/crypto/index.md
+    - "防火墙规则匹配": sims/firewall-acl/index.md
+    - "钓鱼识别闯关": sims/phishing-quiz/index.md
   - 学习图谱: learning-graph/index.md
   - 常见问题: faq/index.md
   - "在线模拟卷": mock-exam.md

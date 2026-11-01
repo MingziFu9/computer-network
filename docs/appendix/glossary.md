@@ -312,6 +312,39 @@ description: 本书主要术语的中英文名称、简明定义和例子，按�
 
 | 术语 | 英文 | 定义 | 例子 |
 |---|---|---|---|
+| <span id="g-机密性"></span>机密性 | Confidentiality | 信息只让有权限的人看到，主要靠加密和访问控制保证 | HTTPS 让抓包者看不到密码 |
+| <span id="g-完整性"></span>完整性 | Integrity | 信息在传送和存储中没有被篡改，主要靠哈希和数字签名保证 | 收款账号被偷偷改掉就破坏了完整性 |
+| <span id="g-可用性"></span>可用性 | Availability | 有权限的人在需要时能正常使用信息和服务 | 网站被 DDoS 冲垮就破坏了可用性 |
+| <span id="g-钓鱼"></span>钓鱼 | Phishing | 冒充可信的单位或熟人，骗人点链接、输密码或转账的攻击 | 冒充财务部的“工资确认”邮件 |
+| <span id="g-勒索软件"></span>勒索软件 | Ransomware | 把受害者的文件加密，要求付款才给解密的恶意程序 | 文件突然打不开，出现付款说明 |
+| <span id="g-拒绝服务攻击-DDoS"></span>拒绝服务攻击 DDoS | Distributed Denial of Service | 控制大量设备同时向目标发送请求，耗尽其资源或带宽，使正常用户无法使用 | 网站在促销时被大量虚假请求冲垮 |
+| <span id="g-中间人攻击"></span>中间人攻击 | Man-in-the-Middle Attack | 攻击者插在通信双方之间偷看或篡改数据 | 在公共 WiFi 中冒充网关截获数据 |
+| <span id="g-ARP-欺骗"></span>ARP 欺骗 | ARP Spoofing | 在局域网中冒充其他主机（常是网关）回答 ARP，使别人的数据先发到攻击者 | 不停广播“192.168.8.1 的 MAC 是我” |
+| <span id="g-社会工程学"></span>社会工程学 | Social Engineering | 利用人的信任、恐惧、贪便宜等心理骗取信息或钱财的手段 | 冒充领导要求紧急转账 |
+| <span id="g-加密"></span>加密 | Encryption | 用密钥把明文变成看不懂的密文的过程，反过来叫解密 | 把“周三开会”变成一串乱码 |
+| <span id="g-密钥"></span>密钥 | Key | 加密和解密时使用的秘密参数 | 对称加密中双方共享的一串数字 |
+| <span id="g-对称加密"></span>对称加密 | Symmetric Encryption | 加密和解密使用同一把密钥的加密方式，速度快但密钥难分发 | AES、SM4 |
+| <span id="g-非对称加密"></span>非对称加密 | Asymmetric Encryption | 使用一对密钥，公钥加密、私钥解密的加密方式，速度慢但公钥可公开 | RSA、SM2 |
+| <span id="g-公钥"></span>公钥 | Public Key | 非对称加密中公开给所有人的密钥，用于加密或验证签名 | 网站证书中包含网站的公钥 |
+| <span id="g-私钥"></span>私钥 | Private Key | 非对称加密中只有自己保管的密钥，用于解密或生成签名 | 禾姐用私钥给通知签名 |
+| <span id="g-哈希"></span>哈希 | Hash | 把任意长度的数据算成固定长度的值，改动一点结果就完全不同且不能反推 | SHA-256、SM3 |
+| <span id="g-数字签名"></span>数字签名 | Digital Signature | 发送方用私钥对数据的哈希值签名，接收方用其公钥验证，证明来源和完整性 | 软件安装包上的开发商签名 |
+| <span id="g-数字证书"></span>数字证书 | Digital Certificate | 由 CA 签发、证明某个公钥属于某个主体（如网站域名）的电子文件 | www.xiaohe.com 的 HTTPS 证书 |
+| <span id="g-证书颁发机构"></span>证书颁发机构 | Certificate Authority (CA) | 大家信任的、负责签发和管理数字证书的机构 | 浏览器中预装了一批受信任的 CA |
+| <span id="g-TLS"></span>TLS | Transport Layer Security | 传输层安全协议，在应用层和 TCP 之间提供身份验证、加密和完整性保护，前身是 SSL | HTTPS = HTTP + TLS |
+| <span id="g-防火墙"></span>防火墙 | Firewall | 放在网络边界、按规则决定哪些流量可以通过的设备或软件 | Windows Defender 防火墙 |
+| <span id="g-包过滤防火墙"></span>包过滤防火墙 | Packet Filtering Firewall | 按每个数据包的地址、协议、端口号决定放行或拒绝的防火墙 | 路由器上的 ACL |
+| <span id="g-状态检测防火墙"></span>状态检测防火墙 | Stateful Inspection Firewall | 记住连接状态，属于已建立连接的返回流量自动放行的防火墙 | 家用路由器默认阻止外网主动连入 |
+| <span id="g-访问控制列表"></span>访问控制列表 | Access Control List (ACL) | 配置在路由器或三层交换机接口上的一组 permit/deny 规则，从上到下逐条匹配 | access-list 110 permit ip 192.168.8.64 0.0.0.31 host 192.168.8.131 |
+| <span id="g-隐含拒绝"></span>隐含拒绝 | Implicit Deny | ACL 末尾看不见的 deny any 规则，前面都不匹配的数据包被拒绝 | 只写 deny 规则会把所有流量都拦掉 |
+| <span id="g-标准-ACL"></span>标准 ACL | Standard ACL | 编号 1～99、只按源 IP 地址过滤的 ACL，应放在靠近目的地 | access-list 1 permit 192.168.8.0 0.0.0.63 |
+| <span id="g-扩展-ACL"></span>扩展 ACL | Extended ACL | 编号 100～199、可按源和目的地址、协议、端口过滤的 ACL，应放在靠近源头 | access-list 110 deny ip any host 192.168.8.131 |
+| <span id="g-通配符掩码"></span>通配符掩码 | Wildcard Mask | ACL 中表示地址范围的掩码，0 位必须匹配、1 位不管，等于 255.255.255.255 减子网掩码 | /27 对应 0.0.0.31 |
+| <span id="g-入侵检测系统"></span>入侵检测系统 | Intrusion Detection System (IDS) | 分析网络流量，发现可疑行为时报警但不拦截的系统 | 发现半夜大量数据外传就报警 |
+| <span id="g-入侵防御系统"></span>入侵防御系统 | Intrusion Prevention System (IPS) | 发现攻击时能当场拦截的系统 | 拦截夹带攻击代码的网页请求 |
+| <span id="g-VPN"></span>VPN | Virtual Private Network | 虚拟专用网，通过公共网络建立加密隧道，让远程用户像在内网一样访问 | 出差员工连回工作室访问内部网站 |
+| <span id="g-双因素认证"></span>双因素认证 | Two-Factor Authentication | 登录时除密码外还需第二种凭证（短信验证码、手机确认、安全密钥）的认证方式 | 密码被盗后攻击者仍无法登录 |
+| <span id="g-网络安全等级保护制度"></span>网络安全等级保护制度 | Classified Protection of Cybersecurity | 我国按重要程度把信息系统分为五个安全保护等级、分级保护的制度，现行标准称“等保 2.0” | 业务系统上线前定级、备案和测评 |
 
 ## 第 12 章 网络管理、新技术与综合项目
 

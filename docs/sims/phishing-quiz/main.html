@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>钓鱼识别闯关</title>
+<link rel="stylesheet" href="../common/sim.css">
+<style>
+.mail { border:1px solid var(--line); border-radius:8px; overflow:hidden; margin-top:8px; }
+.mail .hd { background:#f5f7fa; padding:8px 10px; font-size:13px; border-bottom:1px solid var(--line); }
+.mail .hd b { display:inline-block; width:4.5em; color:var(--muted); font-weight:normal; }
+.mail .bd { padding:10px; font-size:14px; white-space:pre-wrap; }
+.lnk { color:#1565c0; text-decoration:underline; cursor:help; }
+.att { display:inline-block; margin-top:6px; padding:3px 8px; border:1px solid var(--line); border-radius:6px; font-family:monospace; font-size:12.5px; }
+.sms { max-width:420px; background:#e8f5e9; border-radius:12px; padding:10px 12px; margin-top:8px; font-size:14px; white-space:pre-wrap; }
+.tag { display:inline-block; font-size:12px; padding:0 8px; border-radius:10px; background:var(--soft); color:var(--accent); margin-right:6px; }
+.big { font-size:18px; }
+#prog { font-size:13px; color:var(--muted); }
+</style>
+</head>
+<body>
+<h1>钓鱼识别闯关：可信，还是钓鱼？</h1>
+<div class="sub">10 封邮件或短信，判断每一封是“可信”还是“钓鱼”。所有内容均为编者虚构；以 .example 结尾的是专门留给示例使用的域名，不对应真实网站。把鼠标移到蓝色链接上（手机上长按）可以看到真实地址。</div>
+<div class="row"><span id="prog"></span><span class="big" id="score"></span></div>
+<div id="card"></div>
+<div class="row"><button id="ok">可信</button><button id="bad">钓鱼</button><button id="nx" class="main">下一题</button><button id="again">重新开始</button></div>
+<div class="box" id="exp" style="display:none"></div>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  function L(show, real) { return '<span class="lnk" title="真实地址：' + real + '">' + show + "</span>"; }
+  var Q = [
+    { k: "邮件", from: "财务部 &lt;finance@xiaohe-pay.example&gt;", sub: "【紧急】十月工资调整确认", body: "各位同事：\n十月工资有调整，请于今日下班前登录确认，逾期未确认将影响发放。\n\n" + L("立即登录确认", "http://xiaohe.com.salary-check.example/login"), ans: 0, cat: "发件人、链接域名、紧迫感、索要信息", why: "发件地址的域名是 xiaohe-pay.example，不是工作室的 xiaohe.com；链接的真实域名是 salary-check.example（xiaohe.com 只是前面的一部分）；“今日下班前”“影响发放”制造紧迫感；要求登录输入密码。这正是情景导入中阿美遇到的邮件。" },
+    { k: "邮件", from: "禾姐 &lt;hejie@xiaohe.com&gt;", sub: "下周三例会改到二楼会议室", body: "大家好，下周三下午 3 点的例会改到二楼会议室，其他不变。\n禾姐", ans: 1, cat: "—", why: "发件地址是工作室的域名，内容是日常工作安排，没有链接、附件，不要求提供任何信息或转账。可信。" },
+    { k: "短信", from: "106xxxxxxxx", body: "【某某银行】尊敬的客户，您的账户存在异常交易，将于今日 24 时冻结。请立即访问 bank-secure-verify.example 验证身份并输入银行卡号和验证码。", ans: 0, cat: "链接域名、紧迫感、索要信息", why: "银行不会通过短信链接让你输入卡号和验证码；域名不是银行的官方域名；“今日冻结”制造恐慌。有疑问应拨打银行卡背面的官方电话核实。" },
+    { k: "短信", from: "106xxxxxxxx", body: "【驿站】您的包裹已到幸福小区东门驿站，取件码 6-2-3018，请于 3 日内领取。", ans: 1, cat: "—", why: "只告知取件码，没有链接，不要求提供信息或付款，是正常的取件通知。即便如此，也不要回复个人信息。" },
+    { k: "邮件", from: "IT 支持 &lt;it@xiaohe.com&gt;", sub: "邮箱容量已满", body: "您好，您的邮箱容量已达 99%，即将无法收信。请直接回复本邮件，告知您的邮箱密码，我们将为您免费扩容。", ans: 0, cat: "索要信息", why: "任何正规的管理员都不会索要你的密码（管理员有后台权限，根本不需要你的密码）。发件地址看起来正确，也可能是被盗的同事邮箱或伪造的显示名。凡是索要密码的，一律当作钓鱼。" },
+    { k: "邮件", from: "老周 &lt;laozhou@xiaohe.com&gt;", sub: "交换机配置已备份", body: "各位：今天调整了交换机配置，备份文件放在内部网站上，需要时查看：\n" + L("https://www.xiaohe.com/files/backup-1031.txt", "https://www.xiaohe.com/files/backup-1031.txt"), ans: 1, cat: "—", why: "发件人地址正确，链接显示的地址和真实地址一致，都是工作室的 www.xiaohe.com，内容与工作相关，不索要信息。可信。" },
+    { k: "邮件", from: "快递服务中心 &lt;service@express-notice.example&gt;", sub: "您的快递电子发票", body: "您好，您的快递已签收，电子发票见附件，请下载后打开查看。", att: "发票.pdf.exe", ans: 0, cat: "发件人、附件", why: "附件名是“发票.pdf.exe”，真正的扩展名是 .exe（可执行程序），故意在中间加了 .pdf 冒充文档，打开就会运行恶意程序。发件人也不是你认识的单位。" },
+    { k: "短信", from: "陌生号码 139xxxxxxxx", body: "我是禾姐，换了个号码。我在开会不方便接电话，客户那边急着要定金，你先帮我往这个账户转 2 万元，回头公司报销：6222 xxxx xxxx xxxx", ans: 0, cat: "发件人、紧迫感、要求转账", why: "冒充领导、陌生号码、“不方便接电话”阻止你核实、要求转账，是典型的社会工程学诈骗。正确做法：用原来存的号码给禾姐打电话，或当面确认。" },
+    { k: "邮件", from: "工作室网站 &lt;noreply@xiaohe.com&gt;", sub: "密码修改提醒", body: "你的内部网站账号刚刚修改了密码。如果不是你本人操作，请尽快联系老周（分机 8001）。", ans: 1, cat: "—", why: "这是常见的安全提醒：没有链接，不要求输入任何信息，让你通过已知的渠道（分机电话）联系管理员。可信。如果不是你本人改的密码，要马上联系管理员。" },
+    { k: "邮件", from: "幸运抽奖中心 &lt;gift@prize-center.example&gt;", sub: "恭喜您被抽中一等奖！", body: "恭喜您在本次周年庆活动中被抽中一等奖：最新款手机一部！只需支付 19.9 元运费即可领取，名额有限，24 小时内有效。\n\n" + L("https://prize-center.example/claim", "https://prize-center.example/claim") + "（网站有 HTTPS 小锁，安全放心）", ans: 0, cat: "发件人、紧迫感、索要信息", why: "你根本没有参加过这个活动；天上不会掉馅饼；支付“运费”是为了骗取银行卡信息；“24 小时内有效”制造紧迫感。网站有 HTTPS 小锁只说明通信加密，不代表网站可信。" }
+  ];
+  var i = 0, score = 0, answered = false;
+  function render() {
+    var q = Q[i];
+    $("prog").textContent = "第 " + (i + 1) + " / " + Q.length + " 题";
+    $("score").textContent = "得分 " + score;
+    var h = '<span class="tag">' + q.k + "</span>";
+    if (q.k === "邮件") h += '<div class="mail"><div class="hd"><b>发件人</b>' + q.from + "<br><b>主题</b>" + q.sub + '</div><div class="bd">' + q.body + (q.att ? '<br><span class="att">📎 ' + q.att + "</span>" : "") + "</div></div>";
+    else h += '<div class="note">发信号码：' + q.from + '</div><div class="sms">' + q.body + "</div>";
+    $("card").innerHTML = h;
+    $("exp").style.display = "none"; answered = false;
+    $("ok").disabled = $("bad").disabled = false; $("nx").disabled = true;
+  }
+  function answer(a) {
+    if (answered) return; answered = true;
+    var q = Q[i], right = a === q.ans; if (right) score++;
+    $("score").textContent = "得分 " + score;
+    $("exp").style.display = "block";
+    $("exp").innerHTML = (right ? '<span class="ok">判断正确！</span>' : '<span class="bad">判断错误。</span>') + "这是一封<b>" + (q.ans ? "可信" : "钓鱼") + "</b>的" + q.k + "。" + (q.ans ? "" : "<br>识别依据（五看）：" + q.cat) + "<br>" + q.why;
+    $("ok").disabled = $("bad").disabled = true; $("nx").disabled = false;
+    if (i === Q.length - 1) { $("nx").disabled = true; $("exp").innerHTML += '<div class="msg"><b>闯关结束：' + score + " / " + Q.length + "</b>　" + (score === Q.length ? "全对，你的防骗意识很强！" : score >= 8 ? "很不错，再看看做错的题。" : "多练几次，记住“五看”：发件人、链接域名、紧迫感、索要信息、附件。") + "</div>"; }
+  }
+  $("ok").onclick = function () { answer(1); };
+  $("bad").onclick = function () { answer(0); };
+  $("nx").onclick = function () { if (i < Q.length - 1) { i++; render(); } };
+  $("again").onclick = function () { i = 0; score = 0; render(); };
+  render();
+})();
+</script>
+<script src="../common/sim.js"></script>
+</body>
+</html>
