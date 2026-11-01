@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>输入网址之后</title>
+<link rel="stylesheet" href="../common/sim.css">
+<style>
+#net { width:100%; height:auto; display:block; }
+.stack { display:grid; grid-template-columns:5.5em 1fr; gap:3px 8px; font-size:12.5px; }
+.stack .l { color:var(--muted); text-align:right; }
+.stack .v { font-family:monospace; background:#f5f5f5; border-radius:4px; padding:1px 6px; min-height:1.5em; }
+.stack .v.on { background:#e8eaf6; color:var(--accent); }
+.badge { display:inline-block; padding:0 8px; border-radius:10px; background:var(--accent); color:#fff; font-size:12px; margin-right:6px; }
+</style>
+</head>
+<body>
+<h1>输入网址之后：从回车到看到网页</h1>
+<div class="sub">回放抓包文件 web_visit.pcap 的 18 帧：小林的电脑（192.168.1.10）访问 http://www.xiaohe.com 。录制环境中 DNS 服务器和网站在同一台服务器 203.0.113.10 上；以太网地址是在小林电脑一侧抓到的，过了网关后会换成下一段链路的 MAC 地址。</div>
+<div class="row"><button id="prev">上一步</button><button id="next" class="main">下一步</button><button id="play">自动播放</button><button id="reset">重来</button><span class="note" id="cnt"></span></div>
+<div class="box"><svg id="net" viewBox="0 0 640 125"></svg></div>
+<div class="grid2">
+  <div class="box"><h2 id="ttl"></h2><div class="msg" id="msg" style="margin-top:0"></div></div>
+  <div class="box"><h2>这一步的封装（自上而下）</h2><div class="stack" id="stk"></div></div>
+</div>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var PCM = "00:e0:4c:68:01:0a", GWM = "00:e0:fc:12:34:01";
+  var X = { pc: 80, gw: 320, sv: 560 };
+  // 每一步：标题、帧号、方向（pc→sv 为 1，sv→pc 为 -1，arp 只到网关，0 为本机处理）、各层内容、说明
+  var S = [
+    { t: "① 解析网址", f: "—", d: 0, L: ["URL：http://www.xiaohe.com", "", "", "", ""], m: "浏览器把网址拆开：协议 http，主机 www.xiaohe.com，没写端口就用 80，路径 /。要连接这台主机，先得知道它的 IP 地址。（电脑开机时已用 DHCP 拿到了自己的地址、网关 192.168.1.1 和 DNS 服务器 203.0.113.10。）" },
+    { t: "② ARP 请求：网关的 MAC 地址是多少？", f: "1", d: 2, L: ["", "", "ARP：谁是 192.168.1.1？请告诉 192.168.1.10", "以太网：" + PCM + " → ff:ff:ff:ff:ff:ff（广播）", "比特"], m: "DNS 服务器 203.0.113.10 不在本网段，数据要先交给网关。电脑还不知道网关的 MAC 地址，于是广播 ARP 请求。" },
+    { t: "③ ARP 应答", f: "2", d: -2, L: ["", "", "ARP：192.168.1.1 的 MAC 是 " + GWM, "以太网：" + GWM + " → " + PCM, "比特"], m: "网关单播回答自己的 MAC 地址，电脑把它记入 ARP 缓存。以后发往外网的帧，目的 MAC 都填网关的。" },
+    { t: "④ DNS 查询", f: "3～4", d: 1, L: ["DNS：www.xiaohe.com 的 A 记录？AAAA 记录？", "UDP：47003 → 53", "IP：192.168.1.10 → 203.0.113.10", "以太网：" + PCM + " → " + GWM, "比特"], m: "电脑同时查询 IPv4 地址（A）和 IPv6 地址（AAAA）。注意以太网的目的 MAC 是网关，IP 的目的地址才是 DNS 服务器。" },
+    { t: "⑤ DNS 应答", f: "5～6", d: -1, L: ["DNS：www.xiaohe.com = 203.0.113.10（无 IPv6 地址）", "UDP：53 → 47003", "IP：203.0.113.10 → 192.168.1.10", "以太网：" + GWM + " → " + PCM, "比特"], m: "拿到了网站的 IP 地址 203.0.113.10。" },
+    { t: "⑥ TCP 第一次握手：SYN", f: "7", d: 1, L: ["（还没有应用层数据）", "TCP：35070 → 80  SYN  seq=0", "IP：192.168.1.10 → 203.0.113.10", "以太网：" + PCM + " → " + GWM, "比特"], m: "HTTP 运行在 TCP 上，先要建立连接。电脑随机选了源端口 35070，连接服务器的 80 端口。" },
+    { t: "⑦ TCP 第二次握手：SYN + ACK", f: "8", d: -1, L: ["", "TCP：80 → 35070  SYN, ACK  seq=0 ack=1", "IP：203.0.113.10 → 192.168.1.10", "以太网：" + GWM + " → " + PCM, "比特"], m: "服务器同意建立连接。" },
+    { t: "⑧ TCP 第三次握手：ACK", f: "9", d: 1, L: ["", "TCP：35070 → 80  ACK  seq=1 ack=1", "IP：192.168.1.10 → 203.0.113.10", "以太网：" + PCM + " → " + GWM, "比特"], m: "连接建立，可以发 HTTP 请求了。" },
+    { t: "⑨ HTTP 请求", f: "10～11", d: 1, L: ["HTTP：GET / HTTP/1.1  Host: www.xiaohe.com", "TCP：35070 → 80  PSH, ACK  154 字节数据", "IP：192.168.1.10 → 203.0.113.10", "以太网：" + PCM + " → " + GWM, "比特"], m: "浏览器发出 HTTP 请求，请求头中带着 Host、User-Agent 和 Connection: close。第 11 帧是服务器的 TCP 确认。" },
+    { t: "⑩ HTTP 响应", f: "12～15", d: -1, L: ["HTTP：HTTP/1.1 200 OK  Content-Length: 286", "TCP：80 → 35070  首部 172 字节 + 网页 286 字节", "IP：203.0.113.10 → 192.168.1.10", "以太网：" + GWM + " → " + PCM, "比特"], m: "服务器返回状态码 200 和网页。响应头和网页正文分在第 12、14 两个报文段里，电脑分别确认（第 13、15 帧）。" },
+    { t: "⑪ 断开连接", f: "16～18", d: -1, L: ["", "TCP：服务器 FIN → 电脑 FIN+ACK → 服务器 ACK", "IP：203.0.113.10 ↔ 192.168.1.10", "以太网：" + GWM + " ↔ " + PCM, "比特"], m: "因为请求中写了 Connection: close，服务器发完网页就先发 FIN。电脑在确认的同时发出自己的 FIN（四次挥手中间两步合成了一步），所以只有 3 帧。" },
+    { t: "⑫ 显示网页", f: "—", d: 0, L: ["HTML：小禾设计工作室 · 内部网站", "", "", "", ""], m: "浏览器解析 HTML，把网页画出来。如果网页里还有图片、样式等文件，会继续发出新的 HTTP 请求。在录制环境中，从第 3 帧发出 DNS 查询到第 14 帧收到网页，只用了约 6 毫秒。" }
+  ];
+  var LN = ["应用层", "运输层", "网络层", "链路层", "物理层"], PR = ["URL", "DNS", "TCP", "HTTP"];
+  var k = 0, timer = null, anim = null;
+  function proto(s) { var a = s.L.join(" "); if (/ARP/.test(a)) return "ARP"; if (/DNS/.test(a)) return "DNS"; if (/HTTP/.test(a) && !/^（/.test(s.L[0]) && s.L[0]) return "HTTP"; if (/TCP/.test(a)) return "TCP"; return s.L[0] ? "浏览器" : ""; }
+  function base(dot) {
+    var s = "";
+    s += '<line x1="' + X.pc + '" y1="55" x2="' + X.sv + '" y2="55" stroke="#90a4ae" stroke-width="3"/>';
+    s += '<text x="200" y="48" text-anchor="middle" font-size="10.5" fill="#78909c">工作室局域网</text><text x="440" y="48" text-anchor="middle" font-size="10.5" fill="#78909c">外网</text>';
+    [["pc", "小林的电脑", "192.168.1.10"], ["gw", "网关（路由器）", "192.168.1.1"], ["sv", "服务器（DNS + 网站）", "203.0.113.10"]].forEach(function (n) {
+      s += '<rect x="' + (X[n[0]] - 70) + '" y="30" width="140" height="50" rx="9" fill="#fff" stroke="#3f51b5" stroke-width="1.8"/>';
+      s += '<text x="' + X[n[0]] + '" y="51" text-anchor="middle" font-size="13" font-weight="bold">' + n[1] + '</text><text x="' + X[n[0]] + '" y="68" text-anchor="middle" font-size="11" fill="#78909c">' + n[2] + "</text>";
+    });
+    if (dot) s += '<circle cx="' + dot.x + '" cy="55" r="12" fill="' + dot.c + '"/><text x="' + dot.x + '" y="59" text-anchor="middle" font-size="9.5" fill="#fff">' + dot.p + "</text>";
+    var st = S[k - 1]; if (st && st.d === 0) s += '<text x="' + X.pc + '" y="100" text-anchor="start" font-size="12" fill="#3f51b5" dx="8">浏览器在本机处理</text>';
+    s += '<text x="10" y="118" font-size="11" fill="#78909c">进度：' + k + " / " + S.length + "</text>";
+    $("net").innerHTML = s;
+  }
+  function color(p) { return { ARP: "#8e24aa", DNS: "#00897b", TCP: "#43a047", HTTP: "#ef6c00" }[p] || "#3f51b5"; }
+  function animate(st) {
+    if (anim) cancelAnimationFrame(anim);
+    var p = proto(st), a, b;
+    if (st.d === 0) { base(null); return; }
+    if (Math.abs(st.d) === 2) { a = st.d > 0 ? X.pc : X.gw; b = st.d > 0 ? X.gw : X.pc; }
+    else { a = st.d > 0 ? X.pc : X.sv; b = st.d > 0 ? X.sv : X.pc; }
+    var t0 = null, dur = 900;
+    function f(ts) { if (!t0) t0 = ts; var r = Math.min(1, (ts - t0) / dur); base({ x: a + (b - a) * r, c: color(p), p: p }); if (r < 1) anim = requestAnimationFrame(f); }
+    anim = requestAnimationFrame(f);
+  }
+  function show() {
+    $("prev").disabled = k === 0; $("next").disabled = k === S.length;
+    if (k === 0) { base(null); $("ttl").textContent = "准备"; $("msg").textContent = "小林在浏览器地址栏输入 http://www.xiaohe.com 并按下回车。点“下一步”或“自动播放”。"; $("stk").innerHTML = LN.map(function (l) { return '<div class="l">' + l + '</div><div class="v"></div>'; }).join(""); $("cnt").textContent = ""; return; }
+    var st = S[k - 1], p = proto(st);
+    $("ttl").innerHTML = (p ? '<span class="badge" style="background:' + color(p) + '">' + p + "</span>" : "") + st.t;
+    $("msg").textContent = st.m;
+    $("cnt").textContent = "抓包帧：" + st.f;
+    $("stk").innerHTML = LN.map(function (l, i) { return '<div class="l">' + l + '</div><div class="v' + (st.L[i] ? " on" : "") + '">' + (st.L[i] || "") + "</div>"; }).join("");
+    animate(st);
+  }
+  function stop() { if (timer) { clearInterval(timer); timer = null; $("play").textContent = "自动播放"; } }
+  $("next").onclick = function () { stop(); if (k < S.length) { k++; show(); } };
+  $("prev").onclick = function () { stop(); if (k > 0) { k--; show(); } };
+  $("reset").onclick = function () { stop(); k = 0; show(); };
+  $("play").onclick = function () {
+    if (timer) { stop(); return; }
+    if (k >= S.length) k = 0;
+    $("play").textContent = "暂停";
+    timer = setInterval(function () { if (k < S.length) { k++; show(); } else stop(); }, 2200);
+  };
+  show();
+})();
+</script>
+<script src="../common/sim.js"></script>
+</body>
+</html>

@@ -61,7 +61,7 @@
 | [第 7 章 路由：数据包怎么找路](chapters/07-routing/index.md) | 实验 7-1 ★ 静态路由连通分店<br>实验 7-2 ★ 用 OSPF 自动找路<br>实验 7-3 ☆ 用 tracert 追踪路径 |
 | [第 8 章 网络层的好帮手：ARP、ICMP、DHCP 与 NAT](chapters/08-arp-dhcp-nat/index.md) | 实验 8-1 ★ 看 ARP 和 DHCP 的包<br>实验 8-2 ★ 在 Packet Tracer 中配置 DHCP 和 NAT<br>实验 8-3 ☆ 动手验证 TTL |
 | [第 9 章 传输层：TCP 与 UDP](chapters/09-transport/index.md) | 实验 9-1 ★ 在抓包里找三次握手和四次挥手<br>实验 9-2 ★ 两人聊天程序<br>实验 9-3 ☆ TCP 与 UDP 对比 |
-| [第 10 章 应用层：域名、网页与常用服务](chapters/10-application/index.md) | 实验 10-1 ★ 实验名称<br>实验 10-2 ★ 实验名称<br>实验 10-3 ★ 实验名称 |
+| [第 10 章 应用层：域名、网页与常用服务](chapters/10-application/index.md) | 实验 10-1 ★ 查域名、看网页请求<br>实验 10-2 ★ 搭工作室内部网站、DNS 和邮件服务器<br>实验 10-3 ☆ 用 Python 搭一个网页 |
 | [第 11 章 网络安全](chapters/11-security/index.md) | 实验 11-1 ★ 实验名称<br>实验 11-2 ★ 实验名称<br>实验 11-3 ★ 实验名称 |
 | [第 12 章 网络管理、新技术与综合项目](chapters/12-management/index.md) | 实验 12-1 ★ 实验名称<br>实验 12-2 ★ 实验名称<br>实验 12-3 ★ 实验名称 |
 

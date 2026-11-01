@@ -278,6 +278,35 @@ description: 本书主要术语的中英文名称、简明定义和例子，按�
 
 | 术语 | 英文 | 定义 | 例子 |
 |---|---|---|---|
+| <span id="g-应用层"></span>应用层 | Application Layer | 五层模型的最上层，规定应用程序之间通信的格式和规则，如 DNS、HTTP、SMTP | 浏览器和网站之间用 HTTP 对话 |
+| <span id="g-客户—服务器模式"></span>客户—服务器模式 | Client/Server (C/S) | 服务器一直运行等待请求，客户在需要时主动发出请求的工作方式；客户端为浏览器时叫 B/S 模式 | 浏览器访问网站、手机 App 访问服务器 |
+| <span id="g-对等网络"></span>对等网络 | Peer-to-Peer (P2P) | 没有固定服务器，每台电脑既是客户也是服务器，互相提供资源的工作方式 | 文件分享下载，下载的人越多越快 |
+| <span id="g-域名"></span>域名 | Domain Name | 用点分隔的、便于人记忆的主机名字，从右往左级别降低 | www.xiaohe.com |
+| <span id="g-域名系统"></span>域名系统 | Domain Name System (DNS) | 把域名转换成 IP 地址的分布式系统，查询一般用 UDP 53 端口 | 输入 www.xiaohe.com，DNS 查出 192.168.8.130 |
+| <span id="g-顶级域名"></span>顶级域名 | Top-Level Domain (TLD) | 域名最右边的一级，分国家和地区顶级域名与通用顶级域名 | .cn、.com、.org |
+| <span id="g-根域名服务器"></span>根域名服务器 | Root Name Server | DNS 最高层的服务器，知道所有顶级域名服务器的地址，全世界共 13 组 | a.root-servers.net |
+| <span id="g-顶级域名服务器"></span>顶级域名服务器 | TLD Name Server | 管理某个顶级域名，知道其下各二级域名的权威服务器 | .com 顶级域名服务器 |
+| <span id="g-权威域名服务器"></span>权威域名服务器 | Authoritative Name Server | 保存某个域名下主机名与 IP 地址的对应关系，给出最终答案 | xiaohe.com 的权威服务器回答 www 的地址 |
+| <span id="g-本地域名服务器"></span>本地域名服务器 | Local Name Server | 电脑网络设置中的 DNS 服务器，替主机完成查询并缓存结果 | 家里路由器或运营商的 DNS 服务器 |
+| <span id="g-递归查询"></span>递归查询 | Recursive Query | 被询问的服务器必须给出最终答案，自己不知道就替询问者去查 | 主机向本地域名服务器的查询 |
+| <span id="g-迭代查询"></span>迭代查询 | Iterative Query | 被询问的服务器不知道答案时，只告诉询问者下一步该去问谁 | 根服务器回答“去问 .com 服务器” |
+| <span id="g-hosts-文件"></span>hosts 文件 | hosts File | 本机保存“IP 地址 域名”对应关系的文本文件，优先于 DNS 查询 | C:\Windows\System32\drivers\etc\hosts |
+| <span id="g-DNS-劫持"></span>DNS 劫持 | DNS Hijacking | 篡改域名解析结果，把用户引向错误或虚假网站的攻击 | 输入正确网址却打开了钓鱼网站 |
+| <span id="g-万维网"></span>万维网 | World Wide Web (WWW) | 互联网上大量网页通过超链接互相连接形成的信息网络 | 用浏览器浏览的各种网站 |
+| <span id="g-URL"></span>URL | Uniform Resource Locator | 统一资源定位符，即网址，由协议、主机、端口、路径、查询参数、片段组成 | https://www.xiaohe.com/news/list.html?page=2 |
+| <span id="g-HTTP"></span>HTTP | HyperText Transfer Protocol | 超文本传输协议，浏览器和网站之间一问一答、无状态的文本协议，默认端口 80 | GET / HTTP/1.1 |
+| <span id="g-HTTPS"></span>HTTPS | HTTP Secure | 在 HTTP 和 TCP 之间加上 TLS 加密的 HTTP，默认端口 443 | 地址栏显示锁形图标的网站 |
+| <span id="g-请求方法"></span>请求方法 | Request Method | HTTP 请求行中的第一个词，表示要服务器做什么 | GET 获取网页，POST 提交表单 |
+| <span id="g-状态码"></span>状态码 | Status Code | HTTP 响应中的三位数字，第一位表示类别：2 成功、3 重定向、4 客户端错误、5 服务器错误 | 200 OK、404 Not Found |
+| <span id="g-Cookie"></span>Cookie | Cookie | 服务器通过 Set-Cookie 让浏览器保存、浏览器以后每次请求都带上的一小段数据，用于识别用户 | 登录后保持登录状态 |
+| <span id="g-Web-API"></span>Web API | Web API | 供程序调用的 HTTP 接口，返回数据而不是网页 | 天气 App 向服务器查询天气数据 |
+| <span id="g-JSON"></span>JSON | JavaScript Object Notation | 一种轻量的数据格式，写法类似 Python 的字典和列表 | {"room": "二楼会议室"} |
+| <span id="g-SMTP"></span>SMTP | Simple Mail Transfer Protocol | 简单邮件传送协议，用于发送邮件和在邮件服务器之间传递邮件，端口 25 | 邮件程序把写好的邮件交给发件服务器 |
+| <span id="g-POP3"></span>POP3 | Post Office Protocol 3 | 邮局协议第 3 版，把邮件从服务器信箱下载到本机，端口 110 | 只在一台电脑上收邮件 |
+| <span id="g-IMAP"></span>IMAP | Internet Message Access Protocol | 互联网报文存取协议，邮件保留在服务器上，多设备同步，端口 143 | 手机和电脑看到的邮件、已读状态一致 |
+| <span id="g-FTP"></span>FTP | File Transfer Protocol | 文件传输协议，使用控制连接（21）和数据连接两个 TCP 连接，明文传送 | 用 FTP 客户端上传网站文件 |
+| <span id="g-SSH"></span>SSH | Secure Shell | 加密的远程登录协议，端口 22 | 用 SSH 登录 Linux 服务器或交换机 |
+| <span id="g-CDN"></span>CDN | Content Delivery Network | 内容分发网络，在各地部署缓存服务器，让用户就近获取内容 | 视频网站从本地缓存服务器播放 |
 
 ## 第 11 章 网络安全
 
