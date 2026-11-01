@@ -1,0 +1,18 @@
+# 《计算机视觉及应用实战》实验环境（教材编写时实测通过的版本，Python 3.12.3）
+# 安装：pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+# 没有 NVIDIA 显卡的电脑可以先装 CPU 版 PyTorch：pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+opencv-python==5.0.0.93
+numpy==2.5.4
+matplotlib==3.11.2
+pillow==12.3.0
+torch==2.15.0
+torchvision==0.29.2
+ultralytics==8.4.194
+lap==0.5.13          # 第 7 章目标跟踪
+gradio==6.31.0       # 第 9 章网页
+jupyterlab           # 打开 .ipynb（用云端 Notebook 或 VS Code 可以不装）
+
+# 以下仅第 8 章实验 8-3、8-4 需要，且需要 GPU（编者未实测版本，待实测）：
+# diffusers transformers accelerate
+# 以下仅实验 9-4 第 4 步需要（导出 ONNX，待实测）：
+# onnx onnxruntime

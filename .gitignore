@@ -1,0 +1,12 @@
+site/
+__pycache__/
+*.joblib
+*.model
+*.pt
+.ipynb_checkpoints/
+build/
+node_modules/
+
+# 运行产物
+labs/**/output/
+labs/ch*/*.pcapng.tmp

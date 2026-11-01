@@ -1,0 +1,57 @@
+# ============================================================
+# 课程配置：全书唯一需要手改的配置文件
+# 改完后运行  python tools/course.py sync  ，会自动更新：
+#   mkdocs.yml 的站点名和导航、首页课程信息与目录、缺少的章节骨架、
+#   实验目录、术语表的章节小节、学习图谱的章节列表、附录编号
+# 课件（tools/make_slides.py）、教案（tools/make_lesson_plan.py）、Word/PDF 版（tools/export_docx.py）
+# 也从这里读取课程名、学时等信息
+# ============================================================
+
+title: 计算机网络
+description: 面向成人教育人工智能技术应用专业（专科）的《计算机网络》教材，零基础起步，每章配套 3 个动手实验，贯穿“小禾设计工作室”组网项目
+audience: 成人教育（继续教育）人工智能技术应用专业专科学生，多为在职学习者
+github_user: MingziFu9                # 网址 https://<github_user>.github.io/<repo>/
+repo: computer-network
+
+credits: 4                            # 学分
+hours: {theory: 60, lab: 12}          # 学时：理论 + 实验（理论中线下 14）
+semester: 2                           # 开课学期
+exam: 闭卷                            # 期末考核方式
+labs_per_chapter: 3                   # 每章实验数；0 表示没有实验
+lab_section: 本章实验                 # 实验部分的二级标题；导论用“在线体验”
+lab_word: 实验                        # 每个实验的三级标题前缀（### 实验 N-M）；导论用“体验”
+frontier_title: AI 与网络             # 每章“前沿”小节的名称
+certificates: []
+
+# 章节：dir 是 docs/chapters/ 下的文件夹名（两位章号开头），short 用于学习图谱等窄处
+# theory / lab 是本章学时；labs 可单独覆盖本章实验数；offline 可指定本章线下学时（不写则按 online_ratio 分）
+chapters:
+  - {dir: 01-intro, title: 认识计算机网络, short: 认识网络, theory: 5, lab: 1, offline: 1}
+  - {dir: 02-architecture, title: 网络体系结构：分层与协议, short: 分层与协议, theory: 5, lab: 1, offline: 1}
+  - {dir: 03-physical, title: 物理层：从比特到信号, short: 物理层, theory: 5, lab: 1, offline: 1}
+  - {dir: 04-datalink, title: 数据链路层与以太网交换, short: 链路层, theory: 5, lab: 1, offline: 1}
+  - {dir: 05-vlan-wlan, title: VLAN 与无线局域网, short: VLAN 与无线, theory: 5, lab: 1, offline: 1}
+  - {dir: 06-ip-address, title: IP 地址：IPv4、子网划分与 IPv6, short: IP 地址, theory: 5, lab: 1, offline: 2}
+  - {dir: 07-routing, title: 路由：数据包怎么找路, short: 路由, theory: 5, lab: 1, offline: 1}
+  - {dir: 08-arp-dhcp-nat, title: 网络层的好帮手：ARP、ICMP、DHCP 与 NAT, short: ARP DHCP NAT, theory: 5, lab: 1, offline: 1}
+  - {dir: 09-transport, title: 传输层：TCP 与 UDP, short: 传输层, theory: 5, lab: 1, offline: 2}
+  - {dir: 10-application, title: 应用层：域名、网页与常用服务, short: 应用层, theory: 5, lab: 1, offline: 1}
+  - {dir: 11-security, title: 网络安全, short: 网络安全, theory: 5, lab: 1, offline: 1}
+  - {dir: 12-management, title: 网络管理、新技术与综合项目, short: 管理与项目, theory: 5, lab: 1, offline: 1}
+
+# 其他页面：追加在导航“常见问题”之后
+extra_pages: [{file: mock-exam.md, title: 在线模拟卷}]
+
+# 附录：docs/appendix/ 下的文件，按顺序自动编号为 A、B、C……（术语表固定为 glossary.md）
+appendices:
+  - {file: a-commands.md, title: 常用网络命令速查}
+  - {file: b-environment.md, title: 实验环境与资源说明}
+  - {file: c-huawei.md, title: Cisco 与华为命令对照}
+  - {file: glossary.md, title: 术语表}
+  - {file: e-project.md, title: 实验报告模板与综合项目指南}
+
+# 教案默认设置（每章可在 lesson-plans/chNN.yml 里覆盖）
+lesson_plan:
+  online_ratio: 0.5                   # 线上学时占比（开放大学以线上为主，按实际改）
+  teacher: ""                         # 授课教师，留空则教案上留出填写位置
+  school: ""                          # 学校名称，留空则不显示
