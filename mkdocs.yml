@@ -62,6 +62,8 @@ nav:
     - "交换机自学习": sims/switch-learning/index.md
     - "VLAN 隔离广播": sims/vlan-isolation/index.md
     - "WiFi 信道": sims/wifi-channel/index.md
+    - "二进制转换器": sims/binary-converter/index.md
+    - "子网划分计算器": sims/subnet-calculator/index.md
   - 学习图谱: learning-graph/index.md
   - 常见问题: faq/index.md
   - "在线模拟卷": mock-exam.md

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>子网划分计算器</title>
+<link rel="stylesheet" href="../common/sim.css">
+<style>
+.tabs button.on { background:var(--accent); color:#fff; }
+input.ip { font-family:monospace; font-size:15px; width:10em; }
+select { font-size:14px; }
+.bin { font-family:monospace; font-size:14px; line-height:1.9; overflow-x:auto; white-space:nowrap; }
+.bin .n { color:#3f51b5; font-weight:bold; } .bin .h { color:#e65100; }
+.bin .lab { display:inline-block; width:6.5em; font-family:sans-serif; color:var(--muted); font-size:12px; }
+table.r { border-collapse:collapse; font-size:13px; width:100%; }
+table.r td, table.r th { border:1px solid var(--line); padding:3px 6px; }
+table.r td:first-child { color:var(--muted); width:9em; }
+.scroll { max-height:260px; overflow:auto; }
+</style>
+</head>
+<body>
+<h1>子网划分计算器</h1>
+<div class="row tabs"><button data-t="calc" class="on">① 算一个地址</button><button data-t="split">② 划分子网</button></div>
+<div id="calc">
+  <div class="row">IP 地址 <input class="ip" id="ip" value="192.168.8.100"> / <select id="pf"></select> <button id="go">计算</button></div>
+  <div class="row ex"><span class="lbl">教材例题：</span><button data-e="192.168.8.100/27">192.168.8.100/27</button><button data-e="192.168.8.150/26">192.168.8.150/26</button><button data-e="10.1.1.200/28">10.1.1.200/28</button><button data-e="192.168.8.70/27">192.168.8.70/27</button></div>
+  <div class="box"><h2>第 1 步：写成二进制，按位“与”（<span style="color:#3f51b5">蓝色</span>是网络位，<span style="color:#e65100">橙色</span>是主机位）</h2><div class="bin" id="bin"></div></div>
+  <div class="box"><h2>第 2 步：结果</h2><table class="r" id="res"></table><div class="msg" id="tip"></div></div>
+</div>
+<div id="split" style="display:none">
+  <div class="row">网段 <input class="ip" id="net2" value="192.168.8.0"> / <select id="pf2"></select>　分成 <select id="n2"></select> 个子网 <button id="go2">划分</button></div>
+  <div class="box"><h2 id="h2"></h2><div class="scroll"><table class="r" id="tb2"></table></div></div>
+</div>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  function parse(s) { var p = s.trim().split("."); if (p.length !== 4) return null; var v = 0; for (var i = 0; i < 4; i++) { var x = +p[i]; if (!/^\d+$/.test(p[i]) || x > 255) return null; v = v * 256 + x; } return v; }
+  function str(v) { return [v >>> 24, (v >>> 16) & 255, (v >>> 8) & 255, v & 255].join("."); }
+  function mask(p) { return p === 0 ? 0 : (0xFFFFFFFF << (32 - p)) >>> 0; }
+  function bin(v, p) {
+    var s = ""; for (var i = 31; i >= 0; i--) { var b = (v >>> i) & 1, pos = 31 - i; s += '<span class="' + (pos < p ? "n" : "h") + '">' + b + "</span>"; if (pos % 8 === 7 && pos < 31) s += "."; }
+    return s;
+  }
+  for (var p = 8; p <= 30; p++) { $("pf").add(new Option(p, p)); $("pf2").add(new Option(p, p)); }
+  [2, 4, 8, 16, 32, 64].forEach(function (n) { $("n2").add(new Option(n, n)); });
+  $("pf").value = 27; $("pf2").value = 24; $("n2").value = 4;
+  function calc() {
+    var ip = parse($("ip").value), p = +$("pf").value;
+    if (ip === null) { $("tip").innerHTML = '<span class="bad">IP 地址格式不对，应为四组 0～255 的数字，用点隔开。</span>'; return; }
+    var m = mask(p), net = (ip & m) >>> 0, bc = (net | (~m >>> 0)) >>> 0, block = Math.pow(2, 32 - p);
+    $("bin").innerHTML = '<span class="lab">IP 地址</span>' + bin(ip, p) + "　" + str(ip) + "<br>" +
+      '<span class="lab">子网掩码</span>' + bin(m, p) + "　" + str(m) + "<br>" +
+      '<span class="lab">按位与 = 网络地址</span>' + bin(net, p) + "　" + str(net) + "<br>" +
+      '<span class="lab">主机位全 1 = 广播</span>' + bin(bc, p) + "　" + str(bc);
+    var first = ip >>> 24, cls = first < 128 ? (first === 127 ? "环回地址（127 开头）" : "A 类") : first < 192 ? "B 类" : first < 224 ? "C 类" : first < 240 ? "D 类（多播）" : "E 类（保留）";
+    var priv = (ip >>> 24) === 10 || ((ip >>> 20) === 0xAC1) || ((ip >>> 16) === 0xC0A8);
+    var oct = Math.floor(p / 8), mv = (m >>> (24 - 8 * Math.min(oct, 3))) & 255;
+    var hostRole = ip === net ? "（这是网络地址，不能分配给主机）" : ip === bc ? "（这是广播地址，不能分配给主机）" : "（可以分配给主机）";
+    $("res").innerHTML =
+      "<tr><td>子网掩码</td><td>" + str(m) + "（/" + p + "）</td></tr>" +
+      "<tr><td>网络地址</td><td><b>" + str(net) + "</b></td></tr>" +
+      "<tr><td>广播地址</td><td><b>" + str(bc) + "</b></td></tr>" +
+      "<tr><td>可用地址范围</td><td>" + (p >= 31 ? "—" : str(net + 1) + " ～ " + str(bc - 1)) + "</td></tr>" +
+      "<tr><td>可用主机数</td><td>2<sup>" + (32 - p) + "</sup> − 2 = " + (block - 2) + "</td></tr>" +
+      "<tr><td>这个地址</td><td>" + str(ip) + hostRole + "</td></tr>" +
+      "<tr><td>地址类别</td><td>" + cls + (priv ? "，私有地址" : "") + "</td></tr>";
+    $("tip").innerHTML = p % 8 === 0 ? "前缀是 8 的倍数，网络号正好是前 " + (p / 8) + " 组。" :
+      "快速算法：掩码第 " + (oct + 1) + " 组是 " + ((m >>> (24 - 8 * oct)) & 255) + "，块大小 = 256 − " + ((m >>> (24 - 8 * oct)) & 255) + " = " + (256 - ((m >>> (24 - 8 * oct)) & 255)) +
+      "。第 " + (oct + 1) + " 组 " + ((ip >>> (24 - 8 * oct)) & 255) + " 落在 " + ((net >>> (24 - 8 * oct)) & 255) + "～" + ((bc >>> (24 - 8 * oct)) & 255) + " 这一块。";
+  }
+  function split() {
+    var base = parse($("net2").value), p = +$("pf2").value, n = +$("n2").value, k = Math.log2(n), np = p + k;
+    if (base === null) { $("h2").textContent = "网段格式不对"; $("tb2").innerHTML = ""; return; }
+    if (np > 30) { $("h2").textContent = "借 " + k + " 位后前缀变成 /" + np + "，超过 /30，分不了这么多。"; $("tb2").innerHTML = ""; return; }
+    var m = mask(p), net = (base & m) >>> 0, size = Math.pow(2, 32 - np);
+    $("h2").innerHTML = (net !== base ? "（" + str(base) + " 不是网络地址，已换算成 " + str(net) + "）" : "") +
+      "分成 " + n + " 个 = 2<sup>" + k + "</sup>，借 " + k + " 位 → 新前缀 /" + np + "，掩码 " + str(mask(np)) + "，每个子网 " + size + " 个地址、可用 " + (size - 2) + " 个";
+    var rows = "<tr><th>子网</th><th>网络地址</th><th>可用范围</th><th>广播地址</th></tr>";
+    for (var i = 0; i < n; i++) { var a = net + i * size; rows += "<tr><td>" + (i + 1) + "</td><td>" + str(a) + "/" + np + "</td><td>" + str(a + 1) + " ～ " + str(a + size - 2) + "</td><td>" + str(a + size - 1) + "</td></tr>"; }
+    $("tb2").innerHTML = rows;
+  }
+  $("go").onclick = calc; $("ip").onkeydown = function (e) { if (e.key === "Enter") calc(); }; $("pf").onchange = calc;
+  $("go2").onclick = split; $("pf2").onchange = split; $("n2").onchange = split;
+  Array.prototype.forEach.call(document.querySelectorAll("[data-e]"), function (b) { b.onclick = function () { var s = b.dataset.e.split("/"); $("ip").value = s[0]; $("pf").value = s[1]; calc(); }; });
+  Array.prototype.forEach.call(document.querySelectorAll("[data-t]"), function (b) {
+    b.onclick = function () {
+      Array.prototype.forEach.call(document.querySelectorAll("[data-t]"), function (x) { x.className = x === b ? "on" : ""; });
+      $("calc").style.display = b.dataset.t === "calc" ? "" : "none"; $("split").style.display = b.dataset.t === "split" ? "" : "none";
+      if (b.dataset.t === "split") split();
+    };
+  });
+  calc();
+})();
+</script>
+<script src="../common/sim.js"></script>
+</body>
+</html>

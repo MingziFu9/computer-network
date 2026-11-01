@@ -125,7 +125,7 @@ description: 本书主要术语的中英文名称、简明定义和例子，按�
 | <span id="g-以太网"></span>以太网 | Ethernet | 由 IEEE 802.3 标准规定的局域网技术，今天局域网的绝对主流 | 办公室网线连接的网络 |
 | <span id="g-MAC-地址"></span>MAC 地址 | MAC Address | 固化在网卡中的 48 位硬件地址，前 24 位是厂商编号 | 00:e0:4c:68:01:0a |
 | <span id="g-OUI"></span>OUI | Organizationally Unique Identifier | IEEE 分配给厂商的 24 位编号，即 MAC 地址的前 24 位 | 00:e0:4c 属于瑞昱半导体 |
-| <span id="g-广播地址"></span>广播地址 | Broadcast Address | 48 位全为 1 的 MAC 地址，表示发给局域网中所有网卡 | ff:ff:ff:ff:ff:ff |
+| <span id="g-广播地址"></span>广播地址 | Broadcast Address | 表示发给本网络所有主机的地址：MAC 广播地址是 48 位全 1；IP 广播地址是主机号全 1 的地址（第 6 章） | ff:ff:ff:ff:ff:ff；192.168.8.0/24 的广播地址 192.168.8.255 |
 | <span id="g-单播"></span>单播 | Unicast | 发给某一个特定接收方的通信方式 | 电脑把网页请求发给路由器 |
 | <span id="g-多播"></span>多播 | Multicast | 发给一组接收方的通信方式，也叫组播 | IPTV、视频会议 |
 | <span id="g-最大传送单元"></span>最大传送单元 | Maximum Transmission Unit | 帧的数据部分允许的最大长度，简称 MTU，以太网为 1500 字节 | IP 数据报超过 1500 字节要分片 |
@@ -171,6 +171,29 @@ description: 本书主要术语的中英文名称、简明定义和例子，按�
 
 | 术语 | 英文 | 定义 | 例子 |
 |---|---|---|---|
+| <span id="g-IP-地址"></span>IP 地址 | IP Address | 网络层给主机或路由器接口分配的地址，IPv4 为 32 位，IPv6 为 128 位 | 192.168.8.11 |
+| <span id="g-IP-协议"></span>IP 协议 | Internet Protocol | 网际协议，互联网网络层的核心协议，提供尽力而为的数据报服务 | IPv4、IPv6 |
+| <span id="g-尽力而为"></span>尽力而为 | Best Effort | 尽最大努力交付，但不保证可靠、不保证顺序、不保证不重复的服务方式 | IP 协议的服务 |
+| <span id="g-IPv4-地址"></span>IPv4 地址 | IPv4 Address | 32 位的 IP 地址，用点分十进制书写 | 203.0.113.10 |
+| <span id="g-点分十进制"></span>点分十进制 | Dotted Decimal Notation | 把 32 位地址分成 4 组、每组写成十进制、用点隔开的写法 | 11000000 10101000 ... 写成 192.168.... |
+| <span id="g-网络号"></span>网络号 | Network ID | IP 地址中标识主机所在网络的部分 | 192.168.8.0/24 中的 192.168.8 |
+| <span id="g-主机号"></span>主机号 | Host ID | IP 地址中标识网络中某一台主机的部分 | 192.168.8.11/24 中的 11 |
+| <span id="g-网络地址"></span>网络地址 | Network Address | 主机号全 0 的地址，代表网络本身，不能分配给主机 | 192.168.8.96/27 |
+| <span id="g-环回地址"></span>环回地址 | Loopback Address | 发给本机自己的地址，IPv4 为 127 开头，IPv6 为 ::1 | ping 127.0.0.1 |
+| <span id="g-链路本地地址"></span>链路本地地址 | Link-local Address | 只在本链路有效的地址：IPv4 为 169.254.x.x，IPv6 为 fe80:: 开头 | 获取不到 DHCP 地址时出现 169.254.x.x |
+| <span id="g-私有地址"></span>私有地址 | Private Address | 可在内部网络自由使用、不能直接在互联网上使用的地址：10.0.0.0/8、172.16.0.0/12、192.168.0.0/16 | 家里的 192.168.1.x |
+| <span id="g-子网掩码"></span>子网掩码 | Subnet Mask | 与 IP 地址配合、用 1 标出网络号、0 标出主机号的 32 位数 | 255.255.255.224 |
+| <span id="g-CIDR"></span>CIDR | Classless Inter-Domain Routing | 无分类域间路由：取消 A、B、C 类，网络前缀可为任意长度，用斜线记法表示 | 192.168.8.0/24 |
+| <span id="g-前缀长度"></span>前缀长度 | Prefix Length | 斜线记法中斜线后的数字，即网络号的位数 | /27 表示网络号 27 位 |
+| <span id="g-块大小"></span>块大小 | Block Size | 一个子网包含的地址数，在最后一个非 255 的八位组上等于 256 减去掩码值 | /27 的块大小为 32 |
+| <span id="g-子网划分"></span>子网划分 | Subnetting | 从主机号中借位作为子网号，把一个网络分成多个子网 | 把 /24 分成 4 个 /26 |
+| <span id="g-变长子网掩码"></span>变长子网掩码 | Variable Length Subnet Mask | 同一网络中的各子网使用不同长度的前缀、按需分配，简称 VLSM | 设计部 /26、服务器 /29 |
+| <span id="g-路由聚合"></span>路由聚合 | Route Aggregation | 把多个连续的网络合并成一个更大的网络来表示，减少路由表项 | 192.168.8.0/24 和 192.168.9.0/24 合并为 192.168.8.0/23 |
+| <span id="g-生存时间"></span>生存时间 | Time To Live | IP 首部中限制数据报最多经过多少个路由器的字段，简称 TTL，每过一个路由器减 1 | Linux 默认 64，Windows 默认 128 |
+| <span id="g-协议"></span>协议 | Protocol（IP 首部字段） | IP 首部中指出数据部分交给哪个上层协议的字段：1 ICMP、6 TCP、17 UDP | Protocol: TCP (6) |
+| <span id="g-分片"></span>分片 | Fragmentation | IP 数据报大于链路 MTU 时被切成几片分别传送、到目的主机再重组 | 首部的 Don't fragment 标志 |
+| <span id="g-IPv6"></span>IPv6 | Internet Protocol version 6 | 下一代 IP 协议，地址 128 位，首部固定 40 字节 | 我国推进 IPv6 规模部署 |
+| <span id="g-冒号十六进制"></span>冒号十六进制 | Colon Hexadecimal Notation | IPv6 地址的写法：8 组、每组 4 个十六进制数，用冒号隔开 | 2001:db8::ff00:42:8329 |
 
 ## 第 7 章 路由：数据包怎么找路
 
