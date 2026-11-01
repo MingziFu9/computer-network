@@ -199,6 +199,28 @@ description: 本书主要术语的中英文名称、简明定义和例子，按�
 
 | 术语 | 英文 | 定义 | 例子 |
 |---|---|---|---|
+| <span id="g-路由器"></span>路由器 | Router | 连接不同网络、根据目的 IP 地址查路由表转发数据报的设备，工作在网络层 | 总部与分店之间的 R1、R2 |
+| <span id="g-转发"></span>转发 | Forwarding | 路由器收到数据报后查路由表、从合适接口送出的过程（交换机按 MAC 地址表转发帧也叫转发） | 每个数据报都要做，必须很快 |
+| <span id="g-路由选择"></span>路由选择 | Routing | 决定到各网络的路径、建立和更新路由表的过程 | OSPF 计算最短路径 |
+| <span id="g-默认网关"></span>默认网关 | Default Gateway | 主机上配置的本网段路由器接口地址，发往其他网段的数据都交给它 | 192.168.8.1 |
+| <span id="g-路由表"></span>路由表 | Routing Table | 路由器中记录“去往某网络从哪里走”的表，核心是目的网络、下一跳和出接口 | show ip route 的输出 |
+| <span id="g-下一跳"></span>下一跳 | Next Hop | 去往目的网络时，下一个路由器的接口地址 | via 10.0.12.2 |
+| <span id="g-直接交付"></span>直接交付 | Direct Delivery | 目的网络就连在本路由器上，不经其他路由器直接送达 | C 开头的直连路由 |
+| <span id="g-默认路由"></span>默认路由 | Default Route | 目的网络为 0.0.0.0/0、匹配所有地址的路由，查不到更具体路由时使用 | ip route 0.0.0.0 0.0.0.0 10.0.12.1 |
+| <span id="g-最长前缀匹配"></span>最长前缀匹配 | Longest Prefix Match | 多条路由都匹配时选前缀最长（最具体）的一条 | /25 优先于 /24 |
+| <span id="g-静态路由"></span>静态路由 | Static Route | 管理员手工配置的路由 | ip route 192.168.9.0 255.255.255.0 10.0.12.2 |
+| <span id="g-动态路由"></span>动态路由 | Dynamic Routing | 路由器之间运行路由协议自动交换信息、计算和更新的路由 | OSPF 学到的 O 开头路由 |
+| <span id="g-距离向量"></span>距离向量 | Distance Vector | 路由器只和邻居交换“到各网络的距离”的路由方式 | RIP |
+| <span id="g-RIP"></span>RIP | Routing Information Protocol | 路由信息协议，距离向量协议，以跳数为度量，最大 15 跳 | 小型网络 |
+| <span id="g-跳数"></span>跳数 | Hop Count | 数据报经过的路由器个数，RIP 用它衡量距离 | 16 跳表示不可达 |
+| <span id="g-链路状态"></span>链路状态 | Link State | 每台路由器向全网通告自己的链路信息、建立全网拓扑后计算路由的方式 | OSPF |
+| <span id="g-OSPF"></span>OSPF | Open Shortest Path First | 开放最短路径优先，链路状态协议，用代价度量，收敛快，可分区域 | 实验 7-2 的三台路由器 |
+| <span id="g-代价"></span>代价 | Cost | OSPF 衡量路径好坏的数值，通常由接口带宽算出，越小越好 | 千兆链路代价为 1 |
+| <span id="g-最短路径算法"></span>最短路径算法 | Shortest Path Algorithm | 由近及远逐个确定节点最短距离的算法，即迪杰斯特拉算法 | OSPF 用它计算路由 |
+| <span id="g-自治系统"></span>自治系统 | Autonomous System | 由一个机构独立管理的网络，有自己的编号，简称 AS | 中国电信 ChinaNet 是 AS4134 |
+| <span id="g-BGP"></span>BGP | Border Gateway Protocol | 边界网关协议，自治系统之间交换路由信息的协议 | 运营商之间互联 |
+| <span id="g-管理距离"></span>管理距离 | Administrative Distance | 思科设备表示路由来源可信度的数值，越小越可信 | 直连 0、静态 1、OSPF 110、RIP 120 |
+| <span id="g-通配符掩码"></span>通配符掩码 | Wildcard Mask | 子网掩码按位取反的结果，用于 OSPF 的 network 命令等 | /26 的通配符掩码为 0.0.0.63 |
 
 ## 第 8 章 网络层的好帮手：ARP、ICMP、DHCP 与 NAT
 

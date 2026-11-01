@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>最短路径</title>
+<link rel="stylesheet" href="../common/sim.css">
+<style>
+#g { width:100%; display:block; }
+.nd { cursor:pointer; }
+.t { font-size:14px; text-anchor:middle; pointer-events:none; font-weight:bold; }
+.c { font-size:13px; text-anchor:middle; cursor:pointer; }
+table.dt { border-collapse:collapse; width:100%; font-size:13px; text-align:center; }
+table.dt th, table.dt td { border:1px solid var(--line); padding:3px 5px; }
+table.dt td.done { background:#e8f5e9; }
+table.dt td.upd { background:#fff8e1; font-weight:bold; }
+</style>
+</head>
+<body>
+<h1>最短路径算法：由近及远，一圈圈确定</h1>
+<div class="sub">点一台路由器作为起点，再点“下一步”。每一步在<b>还没确定</b>的路由器中选距离最小的一个确定下来（绿色），再看经过它到别处是否更近。点链路上的数字可以修改代价（输入 0 表示断开）。</div>
+<div class="row"><span>起点：<b id="src">R1</b></span><button id="step">下一步</button><button id="all">一次算完</button><button id="reset">重新开始</button>
+  <span class="ex"><button id="book">恢复教材例题</button></span></div>
+<div class="grid2">
+  <svg id="g" viewBox="0 0 420 300"></svg>
+  <div class="box"><h2>距离表</h2><div id="tbl"></div></div>
+</div>
+<div class="box"><h2 id="t"></h2><div class="msg" id="msg"></div></div>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var NS = "http://www.w3.org/2000/svg";
+  var N = ["R1", "R2", "R3", "R4", "R5"], P = { R1: [50, 150], R2: [160, 50], R3: [170, 240], R4: [300, 150], R5: [380, 260] };
+  var BOOK = [["R1", "R2", 2], ["R1", "R3", 5], ["R2", "R3", 1], ["R2", "R4", 7], ["R3", "R4", 2], ["R3", "R5", 8], ["R4", "R5", 3]];
+  var E = JSON.parse(JSON.stringify(BOOK)), src = "R1", st;
+  function el(tag, a, txt) { var e = document.createElementNS(NS, tag); for (var k in a) e.setAttribute(k, a[k]); if (txt != null) e.textContent = txt; return e; }
+  function init() {
+    st = { dist: {}, prev: {}, done: {}, log: [], upd: {}, n: 0 };
+    N.forEach(function (n) { st.dist[n] = Infinity; st.prev[n] = null; });
+    st.dist[src] = 0; st.done[src] = true; relax(src);
+    st.log.push("开始：" + src + " 到自己是 0；直接相连的路由器记下距离，其余为 ∞。");
+    draw();
+  }
+  function nb(u) { var r = []; E.forEach(function (e) { if (e[2] > 0) { if (e[0] === u) r.push([e[1], e[2]]); if (e[1] === u) r.push([e[0], e[2]]); } }); return r; }
+  function relax(u) {
+    st.upd = {}; var ch = [];
+    nb(u).forEach(function (x) { var v = x[0], d = st.dist[u] + x[1]; if (!st.done[v] && d < st.dist[v]) { var old = st.dist[v]; st.dist[v] = d; st.prev[v] = u; st.upd[v] = true; ch.push(v + " 更新为 " + d + "（经 " + u + "，" + st.dist[u] + " + " + x[1] + (old < Infinity ? " < " + old : "") + "）"); } });
+    return ch;
+  }
+  function step() {
+    var u = null; N.forEach(function (n) { if (!st.done[n] && st.dist[n] < Infinity && (u === null || st.dist[n] < st.dist[u])) u = n; });
+    if (u === null) { st.log.push(N.some(function (n) { return !st.done[n]; }) ? "剩下的路由器不可达（距离 ∞），算法结束。" : "所有路由器都已确定，算法结束。绿色粗线就是最短路径树。"); st.upd = {}; draw(); return false; }
+    st.done[u] = true; st.n++;
+    var ch = relax(u);
+    st.log.push("第 " + st.n + " 步：未确定的路由器中 " + u + " 距离最小（" + st.dist[u] + "），确定它。" + (ch.length ? "经过它：" + ch.join("；") + "。" : "经过它没有更近的路。"));
+    draw(); return true;
+  }
+  function path(n) { var p = []; for (var x = n; x; x = st.prev[x]) p.unshift(x); return p[0] === src ? p : null; }
+  function draw() {
+    var svg = $("g"); svg.innerHTML = "";
+    E.forEach(function (e, i) {
+      var a = P[e[0]], b = P[e[1]], tree = st.done[e[1]] && st.prev[e[1]] === e[0] || st.done[e[0]] && st.prev[e[0]] === e[1];
+      svg.appendChild(el("line", { x1: a[0], y1: a[1], x2: b[0], y2: b[1], stroke: e[2] <= 0 ? "#eee" : tree ? "#43a047" : "#b0bec5", "stroke-width": tree ? 6 : 3, "stroke-dasharray": e[2] <= 0 ? "6 4" : "" }));
+      var mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
+      svg.appendChild(el("circle", { cx: mx, cy: my, r: 11, fill: "#fff", stroke: "#90a4ae" }));
+      var t = el("text", { x: mx, y: my + 4, "class": "c" }, e[2] <= 0 ? "×" : e[2]);
+      t.onclick = function () { var v = prompt(e[0] + "–" + e[1] + " 的代价（0 表示断开）：", e[2]); if (v !== null && /^\d+$/.test(v.trim())) { e[2] = +v; init(); } };
+      svg.appendChild(t);
+    });
+    N.forEach(function (n) {
+      var p = P[n], g = el("g", { "class": "nd" });
+      g.appendChild(el("circle", { cx: p[0], cy: p[1], r: 22, fill: n === src ? "#3f51b5" : st.done[n] ? "#43a047" : st.upd[n] ? "#ffb300" : "#fff", stroke: "#37474f", "stroke-width": 2 }));
+      g.appendChild(el("text", { x: p[0], y: p[1] + 5, "class": "t", fill: n === src || st.done[n] ? "#fff" : "#333" }, n));
+      g.onclick = function () { src = n; $("src").textContent = n; init(); };
+      svg.appendChild(g);
+    });
+    var h = "<table class='dt'><tr><th>路由器</th><th>距离</th><th>上一站</th><th>最短路径</th></tr>";
+    N.forEach(function (n) { if (n === src) return; var pa = st.done[n] ? path(n) : null; h += "<tr><td>" + n + "</td><td class='" + (st.done[n] ? "done" : st.upd[n] ? "upd" : "") + "'>" + (st.dist[n] === Infinity ? "∞" : st.dist[n]) + "</td><td>" + (st.prev[n] || "—") + "</td><td>" + (pa ? pa.join("→") : "") + "</td></tr>"; });
+    $("tbl").innerHTML = h + "</table>" + (N.every(function (n) { return st.done[n] || st.dist[n] === Infinity; }) ? "<div class='note'>" + src + " 的路由表：去往每台路由器的下一跳 = 最短路径上的第二站。</div>" : "");
+    $("t").textContent = "从 " + src + " 出发";
+    $("msg").innerHTML = st.log.slice(-2).join("<br>");
+  }
+  $("step").onclick = step;
+  $("all").onclick = function () { while (step()); };
+  $("reset").onclick = init;
+  $("book").onclick = function () { E = JSON.parse(JSON.stringify(BOOK)); src = "R1"; $("src").textContent = "R1"; init(); };
+  init();
+})();
+</script>
+<script src="../common/sim.js"></script>
+</body>
+</html>

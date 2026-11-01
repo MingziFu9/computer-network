@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>查路由表</title>
+<link rel="stylesheet" href="../common/sim.css">
+<style>
+input.ip { font-family:monospace; font-size:15px; width:10em; }
+table.rt { border-collapse:collapse; width:100%; font-size:13px; }
+table.rt th, table.rt td { border:1px solid var(--line); padding:4px 6px; }
+table.rt td.m { font-family:monospace; }
+tr.hit td { background:#fff8e1; }
+tr.best td { background:#c8e6c9; font-weight:bold; }
+.del { border:none; background:none; color:var(--neg); cursor:pointer; }
+.add input { font-family:monospace; width:9em; }
+</style>
+</head>
+<body>
+<h1>查路由表：最长前缀匹配</h1>
+<div class="sub">输入目的 IP 地址，路由器逐行检查：目的地址在这一行的网络范围里就算“匹配”（黄色）；匹配的行里选前缀最长的（绿色）。</div>
+<div class="row">目的 IP <input class="ip" id="dst" value="192.168.9.200"> <button id="go">查表</button></div>
+<div class="row ex"><span class="lbl">试试：</span><button data-d="192.168.9.20">192.168.9.20</button><button data-d="192.168.9.200">192.168.9.200</button><button data-d="192.168.8.30">192.168.8.30</button><button data-d="114.114.114.114">114.114.114.114</button><button data-d="10.0.12.2">10.0.12.2</button></div>
+<div class="box"><h2>总部路由器 R1 的路由表</h2>
+<table class="rt"><thead><tr><th>目的网络</th><th>地址范围</th><th>怎么走</th><th>前缀</th><th>匹配？</th><th></th></tr></thead><tbody id="tb"></tbody></table>
+<div class="row add">添加一行：<input id="nn" placeholder="192.168.9.192/26"> <input id="nh" placeholder="下一跳 10.0.13.2" style="width:11em"> <button id="add">添加</button> <button id="rs">恢复默认</button></div>
+</div>
+<div class="box"><h2 id="t"></h2><div class="msg" id="msg"></div></div>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var DEF = [["192.168.8.0/26", "直接交付，接口 Gi0/0"], ["10.0.12.0/30", "直接交付，接口 Gi0/1"], ["192.168.9.0/24", "下一跳 10.0.12.2"], ["192.168.9.128/25", "下一跳 10.0.13.2"], ["0.0.0.0/0", "下一跳 203.0.113.1（默认路由）"]];
+  var rows = DEF.slice();
+  function ip(s) { var p = s.trim().split("."); if (p.length !== 4) return null; var v = 0; for (var i = 0; i < 4; i++) { if (!/^\d+$/.test(p[i]) || +p[i] > 255) return null; v = v * 256 + +p[i]; } return v >>> 0; }
+  function str(v) { return [v >>> 24, (v >>> 16) & 255, (v >>> 8) & 255, v & 255].join("."); }
+  function mask(p) { return p === 0 ? 0 : (0xFFFFFFFF << (32 - p)) >>> 0; }
+  function net(c) { var s = c.split("/"), a = ip(s[0]), p = +s[1]; if (a === null || !(p >= 0 && p <= 32) || s.length !== 2) return null; return { a: (a & mask(p)) >>> 0, p: p, ok: ((a & mask(p)) >>> 0) === a }; }
+  function render() {
+    var d = ip($("dst").value), best = -1, hits = 0;
+    if (d !== null) rows.forEach(function (r, i) { var n = net(r[0]); if (((d & mask(n.p)) >>> 0) === n.a) { hits++; if (best < 0 || n.p > net(rows[best][0]).p) best = i; } });
+    $("tb").innerHTML = rows.map(function (r, i) {
+      var n = net(r[0]), hit = d !== null && ((d & mask(n.p)) >>> 0) === n.a;
+      var end = (n.a + Math.pow(2, 32 - n.p) - 1) >>> 0;
+      return '<tr class="' + (i === best ? "best" : hit ? "hit" : "") + '"><td class="m">' + r[0] + '</td><td class="m">' + str(n.a) + "～" + str(end) + "</td><td>" + r[1] + "</td><td>/" + n.p + "</td><td>" + (d === null ? "" : hit ? "✓" : "—") + '</td><td><button class="del" data-x="' + i + '">删除</button></td></tr>';
+    }).join("");
+    Array.prototype.forEach.call(document.querySelectorAll("[data-x]"), function (b) { b.onclick = function () { rows.splice(+b.dataset.x, 1); render(); }; });
+    if (d === null) { $("t").textContent = "地址格式不对"; $("msg").textContent = "请输入四组 0～255 的数字，用点隔开。"; return; }
+    $("t").textContent = "目的地址 " + str(d) + "：匹配 " + hits + " 行";
+    $("msg").innerHTML = best < 0 ? '<span class="bad">一行都不匹配，路由器丢弃这个数据报</span>（并向发送方报告“目的不可达”，第 8 章）。试试把默认路由删掉再查 114.114.114.114。' :
+      "选中前缀最长的 <b>" + rows[best][0] + "</b>：" + rows[best][1] + "。" + (hits > 1 ? "其余匹配的行前缀更短，不如它具体。" : "") + (net(rows[best][0]).p === 0 ? "只有默认路由匹配，交给运营商。" : "");
+  }
+  $("go").onclick = render; $("dst").onkeydown = function (e) { if (e.key === "Enter") render(); };
+  Array.prototype.forEach.call(document.querySelectorAll("[data-d]"), function (b) { b.onclick = function () { $("dst").value = b.dataset.d; render(); }; });
+  $("add").onclick = function () {
+    var n = net($("nn").value.trim());
+    if (!n) { $("msg").innerHTML = '<span class="bad">网络格式应为 地址/前缀，例如 192.168.9.192/26。</span>'; return; }
+    if (!n.ok) { $("msg").innerHTML = '<span class="bad">' + $("nn").value + " 不是网络地址，主机位不全为 0。应写成 " + str(n.a) + "/" + n.p + "。</span>"; return; }
+    rows.push([str(n.a) + "/" + n.p, $("nh").value.trim() || "下一跳 （未填写）"]); $("nn").value = ""; render();
+  };
+  $("rs").onclick = function () { rows = DEF.slice(); render(); };
+  render();
+})();
+</script>
+<script src="../common/sim.js"></script>
+</body>
+</html>

@@ -58,7 +58,7 @@
 | [第 4 章 数据链路层与以太网交换](chapters/04-datalink/index.md) | 实验 4-1 ★ 在抓包里看以太网帧<br>实验 4-2 ★ Packet Tracer 第一次组网<br>实验 4-3 ☆ 用模拟模式看帧怎么走 |
 | [第 5 章 VLAN 与无线局域网](chapters/05-vlan-wlan/index.md) | 实验 5-1 ★ 按部门划分 VLAN<br>实验 5-2 ★ 两台交换机之间的 Trunk，看 802.1Q 标签<br>实验 5-3 ☆ 设置无线路由器 |
 | [第 6 章 IP 地址：IPv4、子网划分与 IPv6](chapters/06-ip-address/index.md) | 实验 6-1 ★ 子网划分练习<br>实验 6-2 ★ 为工作室规划 IP 地址<br>实验 6-3 ☆ 认识 IPv6 |
-| [第 7 章 路由：数据包怎么找路](chapters/07-routing/index.md) | 实验 7-1 ★ 实验名称<br>实验 7-2 ★ 实验名称<br>实验 7-3 ★ 实验名称 |
+| [第 7 章 路由：数据包怎么找路](chapters/07-routing/index.md) | 实验 7-1 ★ 静态路由连通分店<br>实验 7-2 ★ 用 OSPF 自动找路<br>实验 7-3 ☆ 用 tracert 追踪路径 |
 | [第 8 章 网络层的好帮手：ARP、ICMP、DHCP 与 NAT](chapters/08-arp-dhcp-nat/index.md) | 实验 8-1 ★ 实验名称<br>实验 8-2 ★ 实验名称<br>实验 8-3 ★ 实验名称 |
 | [第 9 章 传输层：TCP 与 UDP](chapters/09-transport/index.md) | 实验 9-1 ★ 实验名称<br>实验 9-2 ★ 实验名称<br>实验 9-3 ★ 实验名称 |
 | [第 10 章 应用层：域名、网页与常用服务](chapters/10-application/index.md) | 实验 10-1 ★ 实验名称<br>实验 10-2 ★ 实验名称<br>实验 10-3 ★ 实验名称 |
