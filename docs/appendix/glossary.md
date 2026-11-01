@@ -247,7 +247,6 @@ description: 本书主要术语的中英文名称、简明定义和例子，按�
 
 | 术语 | 英文 | 定义 | 例子 |
 |---|---|---|---|
-| <span id="g-运输层"></span>运输层 | Transport Layer | 也叫传输层，在两台主机的进程之间提供端到端的通信服务，主要协议是 TCP 和 UDP | 网页、聊天、下载的数据都要经过运输层 |
 | <span id="g-进程"></span>进程 | Process | 正在运行的程序，是运输层通信的真正双方 | 同时打开的浏览器和微信是两个进程 |
 | <span id="g-端口号"></span>端口号 | Port Number | 16 位的编号（0～65535），用来区分同一台主机上的不同进程，相当于公司的分机号 | 网页服务器默认用 80 端口 |
 | <span id="g-熟知端口"></span>熟知端口 | Well-known Port | 0～1023 号端口，固定分配给常用的服务器程序 | HTTP 80、HTTPS 443、DNS 53 |
@@ -278,7 +277,6 @@ description: 本书主要术语的中英文名称、简明定义和例子，按�
 
 | 术语 | 英文 | 定义 | 例子 |
 |---|---|---|---|
-| <span id="g-应用层"></span>应用层 | Application Layer | 五层模型的最上层，规定应用程序之间通信的格式和规则，如 DNS、HTTP、SMTP | 浏览器和网站之间用 HTTP 对话 |
 | <span id="g-客户—服务器模式"></span>客户—服务器模式 | Client/Server (C/S) | 服务器一直运行等待请求，客户在需要时主动发出请求的工作方式；客户端为浏览器时叫 B/S 模式 | 浏览器访问网站、手机 App 访问服务器 |
 | <span id="g-对等网络"></span>对等网络 | Peer-to-Peer (P2P) | 没有固定服务器，每台电脑既是客户也是服务器，互相提供资源的工作方式 | 文件分享下载，下载的人越多越快 |
 | <span id="g-域名"></span>域名 | Domain Name | 用点分隔的、便于人记忆的主机名字，从右往左级别降低 | www.xiaohe.com |
@@ -319,7 +317,6 @@ description: 本书主要术语的中英文名称、简明定义和例子，按�
 | <span id="g-勒索软件"></span>勒索软件 | Ransomware | 把受害者的文件加密，要求付款才给解密的恶意程序 | 文件突然打不开，出现付款说明 |
 | <span id="g-拒绝服务攻击-DDoS"></span>拒绝服务攻击 DDoS | Distributed Denial of Service | 控制大量设备同时向目标发送请求，耗尽其资源或带宽，使正常用户无法使用 | 网站在促销时被大量虚假请求冲垮 |
 | <span id="g-中间人攻击"></span>中间人攻击 | Man-in-the-Middle Attack | 攻击者插在通信双方之间偷看或篡改数据 | 在公共 WiFi 中冒充网关截获数据 |
-| <span id="g-ARP-欺骗"></span>ARP 欺骗 | ARP Spoofing | 在局域网中冒充其他主机（常是网关）回答 ARP，使别人的数据先发到攻击者 | 不停广播“192.168.8.1 的 MAC 是我” |
 | <span id="g-社会工程学"></span>社会工程学 | Social Engineering | 利用人的信任、恐惧、贪便宜等心理骗取信息或钱财的手段 | 冒充领导要求紧急转账 |
 | <span id="g-加密"></span>加密 | Encryption | 用密钥把明文变成看不懂的密文的过程，反过来叫解密 | 把“周三开会”变成一串乱码 |
 | <span id="g-密钥"></span>密钥 | Key | 加密和解密时使用的秘密参数 | 对称加密中双方共享的一串数字 |
@@ -339,7 +336,6 @@ description: 本书主要术语的中英文名称、简明定义和例子，按�
 | <span id="g-隐含拒绝"></span>隐含拒绝 | Implicit Deny | ACL 末尾看不见的 deny any 规则，前面都不匹配的数据包被拒绝 | 只写 deny 规则会把所有流量都拦掉 |
 | <span id="g-标准-ACL"></span>标准 ACL | Standard ACL | 编号 1～99、只按源 IP 地址过滤的 ACL，应放在靠近目的地 | access-list 1 permit 192.168.8.0 0.0.0.63 |
 | <span id="g-扩展-ACL"></span>扩展 ACL | Extended ACL | 编号 100～199、可按源和目的地址、协议、端口过滤的 ACL，应放在靠近源头 | access-list 110 deny ip any host 192.168.8.131 |
-| <span id="g-通配符掩码"></span>通配符掩码 | Wildcard Mask | ACL 中表示地址范围的掩码，0 位必须匹配、1 位不管，等于 255.255.255.255 减子网掩码 | /27 对应 0.0.0.31 |
 | <span id="g-入侵检测系统"></span>入侵检测系统 | Intrusion Detection System (IDS) | 分析网络流量，发现可疑行为时报警但不拦截的系统 | 发现半夜大量数据外传就报警 |
 | <span id="g-入侵防御系统"></span>入侵防御系统 | Intrusion Prevention System (IPS) | 发现攻击时能当场拦截的系统 | 拦截夹带攻击代码的网页请求 |
 | <span id="g-VPN"></span>VPN | Virtual Private Network | 虚拟专用网，通过公共网络建立加密隧道，让远程用户像在内网一样访问 | 出差员工连回工作室访问内部网站 |
